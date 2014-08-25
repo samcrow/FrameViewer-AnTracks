@@ -108,19 +108,11 @@ public class PersistentFrameDataStore<T extends Marker> extends FrameDataStore<T
         try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
 
             //Read and interpret version line
-            try {
-                int version = getVersion(reader.readLine());
+            int version = getVersion(reader.readLine());
 
-                // Check version
-                if (version != 3) {
-                    throw new ParseException("Invalid version number " + version, 0);
-                }
-            }
-            catch (IllegalArgumentException ex) {
-                // That wasn't a version line, it was a header line!
-                // Use the old parser
-                reader.close();
-                return new PersistentFrameDataStore<>(PersistentFrameDataStore2to3.readFromFile(file));
+            // Check version
+            if (version != 3) {
+                throw new ParseException("Invalid version number " + version, 0);
             }
 
             // Read and ignore header
@@ -253,15 +245,6 @@ public class PersistentFrameDataStore<T extends Marker> extends FrameDataStore<T
 
     public PersistentFrameDataStore() {
 
-    }
-
-    /**
-     * Copies the markers from another frame data store.
-     * <p>
-     * @param other
-     */
-    public PersistentFrameDataStore(PersistentFrameDataStore2to3<T> other) {
-        super(other);
     }
 
 }
