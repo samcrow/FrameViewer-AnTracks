@@ -1,15 +1,16 @@
-package org.samcrow.frameviewer.antracks;
+package org.samcrow.frameviewer.trajectory;
 
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import org.samcrow.frameviewer.MultiFrameObject;
 
 /**
  * Stores a trajectory from AnTracks
  * <p>
  * @author Sam Crow
  */
-public class Trajectory implements Iterable<Trajectory.Point> {
+public class Trajectory implements MultiFrameObject, Iterable<Point> {
 
     /**
      * The first frame for which this trajectory has a position
@@ -20,42 +21,8 @@ public class Trajectory implements Iterable<Trajectory.Point> {
      * The last frame for which this trajectory has a position
      */
     private int lastFrame;
-
-    public static class Point {
-
-        public int x;
-
-        public int y;
-
-        public Point(int x, int y) { this.x = x; this.y = y; }
-
-        @Override
-        public int hashCode() {
-            int hash = 3;
-            hash = 31 * hash + this.x;
-            hash = 31 * hash + this.y;
-            return hash;
-        }
-
-        @Override
-        public boolean equals(Object obj) {
-            if (obj == null) {
-                return false;
-            }
-            if (getClass() != obj.getClass()) {
-                return false;
-            }
-            final Point other = (Point) obj;
-            if (this.x != other.x) {
-                return false;
-            }
-            if (this.y != other.y) {
-                return false;
-            }
-            return true;
-        }
- 
-    }
+    
+    private int id;
 
     /**
      * The points in this trajectory.
@@ -75,6 +42,19 @@ public class Trajectory implements Iterable<Trajectory.Point> {
         
         ensureCapacityForFrame(lastFrame);
     }
+    
+    public Trajectory(int firstFrame, int lastFrame, int id) {
+        this(firstFrame, lastFrame);
+        this.id = id;
+    }
+    
+    public void setId(int newId) {
+        id = newId;
+    }
+    
+    public int getId() {
+        return id;
+    }
 
     /**
      * Returns a point for the given frame
@@ -89,30 +69,23 @@ public class Trajectory implements Iterable<Trajectory.Point> {
 
     /**
      * Sets the point for the given frame
-     * <p>
      * @param frame
      * @param newPoint
      */
     public void set(int frame, Point newPoint) {
-        validateFrame(frame);
         // Ensure that capacity is available for this point
         int index = frameNumberToIndex(frame);
         ensureCapacityForFrame(frame);
 
         points.set(index, newPoint);
     }
-    
-    private void setUnchecked(int frame, Point newPoint) {
-        ensureCapacityForFrame(frame);
-        int index = frameNumberToIndex(frame);
-        
-        points.set(index, newPoint);
-    }
 
+    @Override
     public int getFirstFrame() {
         return firstFrame;
     }
 
+    @Override
     public int getLastFrame() {
         return lastFrame;
     }
@@ -141,7 +114,7 @@ public class Trajectory implements Iterable<Trajectory.Point> {
         // Copy points from other to this
         ensureCapacityForFrame(other.lastFrame);
         for(int frame = this.lastFrame + 1; frame <= other.lastFrame; frame++) {
-            this.setUnchecked(frame, other.get(frame));
+            this.set(frame, other.get(frame));
         }
         // Update end frame
         this.lastFrame = other.lastFrame;

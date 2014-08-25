@@ -5,7 +5,9 @@ import org.samcrow.frameviewer.ui.CanvasPane;
 import org.samcrow.frameviewer.ui.FrameCanvas;
 import org.samcrow.frameviewer.ui.PlaybackControlPane;
 import java.io.File;
+import java.io.IOException;
 import java.io.PrintStream;
+import java.text.ParseException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javafx.application.Application;
@@ -24,8 +26,10 @@ import javafx.stage.Stage;
 import javafx.stage.WindowEvent;
 import jfxtras.labs.dialogs.MonologFX;
 import jfxtras.labs.dialogs.MonologFXButton;
+import org.samcrow.frameviewer.trajectory.Trajectory;
 import org.samcrow.frameviewer.io3.Marker;
 import org.samcrow.frameviewer.io3.PersistentFrameDataStore;
+import org.samcrow.frameviewer.io3.PersistentTrajectoryDataStore;
 import org.samcrow.frameviewer.ui.SaveDialog;
 
 /**
@@ -38,6 +42,8 @@ public class App extends Application {
      * The data model
      */
     private PersistentFrameDataStore<Marker> dataStore;
+    
+    private PersistentTrajectoryDataStore<Trajectory> trajectoryDataStore;
 
     private SaveStatusController saveController;
 
@@ -107,9 +113,10 @@ public class App extends Application {
             box.getChildren().add(bar);
 
             dataStore = new PersistentFrameDataStore<>();
+            trajectoryDataStore = new PersistentTrajectoryDataStore<>();
             saveController = new SaveStatusController(dataStore);
             FrameFinder finder = new FrameFinder(frameDir);
-            model = new DataStoringPlaybackControlModel(finder, dataStore);
+            model = new DataStoringPlaybackControlModel(finder, dataStore, trajectoryDataStore);
 
             FrameCanvas canvas = new FrameCanvas();
             canvas.imageProperty().bind(model.currentFrameImageProperty());
@@ -132,16 +139,9 @@ public class App extends Application {
             stage.setScene(scene);
             stage.show();
             
-            // Check for a command-line argument specifying a file to open
-            if(getParameters().getNamed().containsKey("open-file")) {
-                lastOpenedFile = new File(getParameters().getNamed().get("open-file"));
-
-                dataStore = PersistentFrameDataStore.readFromFile(lastOpenedFile);
-                model.setDataStore(dataStore);
-            }
 
         }
-        catch (Exception ex) {
+        catch (IllegalArgumentException ex) {
             MonologFX dialog = new MonologFX(MonologFX.Type.ERROR);
             dialog.setTitle("Error");
             dialog.setMessage(ex.toString());
@@ -170,7 +170,7 @@ public class App extends Application {
         openItem.setOnAction(new EventHandler<ActionEvent>() {
             @Override
             public void handle(ActionEvent t) {
-                openFile();
+                // TODO
             }
         });
 
@@ -207,22 +207,22 @@ public class App extends Application {
             dataStore.writeTo(saveFile);
             saveController.markSaved();
         }
-        catch (Exception ex) {
+        catch (IOException ex) {
             showExceptionDialog(ex, "Could not save file");
         }
     }
-
-    private void openFile() {
+    
+    private void openTrajectoryFile() {
         try {
             FileChooser chooser = new FileChooser();
             chooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("CSV files", "*.csv"));
 
-            lastOpenedFile = chooser.showOpenDialog(stage);
+            File file = chooser.showOpenDialog(stage);
 
-            dataStore = PersistentFrameDataStore.readFromFile(lastOpenedFile);
-            model.setDataStore(dataStore);
+            trajectoryDataStore = PersistentTrajectoryDataStore.readFrom(file);
+            model.setTrajectoryDataStore(trajectoryDataStore);
         }
-        catch (Exception ex) {
+        catch (IOException | ParseException ex) {
             showExceptionDialog(ex, "Could not open file");
         }
     }

@@ -2,7 +2,8 @@ package org.samcrow.frameviewer.ui;
 
 import java.util.LinkedList;
 import java.util.List;
-import java.util.ListIterator;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javafx.beans.InvalidationListener;
 import javafx.beans.Observable;
 import javafx.beans.property.ObjectProperty;
@@ -12,10 +13,10 @@ import javafx.geometry.Point2D;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.image.Image;
 import javafx.scene.input.KeyEvent;
-import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 import org.samcrow.frameviewer.io3.Marker;
 import org.samcrow.frameviewer.PaintableCanvas;
+import org.samcrow.frameviewer.trajectory.Trajectory;
 import org.samcrow.frameviewer.io3.AntActivity;
 import org.samcrow.frameviewer.io3.AntLocation;
 import org.samcrow.frameviewer.io3.InteractionMarker;
@@ -31,13 +32,8 @@ public class FrameCanvas extends PaintableCanvas {
      * The image to be displayed
      */
     private final ObjectProperty<Image> image = new SimpleObjectProperty<>();
-
-    /**
-     * The markers to display on this frame. This must not be null. For no
-     * markers
-     * to be displayed, this should be set to an empty list.
-     */
-    private List<Marker> markers = new LinkedList<>();
+    
+    private List<Trajectory> trajectories = new LinkedList<>();
 
     /**
      * Local coordinate X position of the frame's top left corner
@@ -73,73 +69,11 @@ public class FrameCanvas extends PaintableCanvas {
                 try {
                     Point2D markerPoint = getFrameLocation(event);
 
-                    // Part 1: See if an existing marker should be edited
-                    for (ListIterator<Marker> iterator = getMarkers().listIterator(); iterator.hasNext();) {
-                        Marker marker = iterator.next();
-                        if (markerClicked(marker, markerPoint)) {
-                            // Edit this marker
-                            MarkerEditDialog dialog = new MarkerEditDialog(getScene().getWindow(), marker);
-                            //Move the dialog to the position of the cursor
-                            dialog.setX(event.getScreenX());
-                            dialog.setY(event.getScreenY());
-
-                            dialog.showAndWait();
-
-                            if (dialog.success()) {
-
-                                if (dialog.deleted()) {
-                                    // Delete this marker
-                                    iterator.remove();
-
-                                }
-                                else {
-                                    // Put the newly created (changed) marker in the list,
-                                    // and replace the original
-                                    Marker newMarker = dialog.createMarker();
-                                    // Move the new marker to the same place as the old one
-                                    newMarker.setX(marker.getX());
-                                    newMarker.setY(marker.getY());
-                                    // Modify the list to replace the current marker in this position
-                                    // with the new one.
-                                    iterator.set(newMarker);
-                                }
-
-                                event.consume();
-                                repaint();
-                            }
-
-                            return;
-                        }
-                    }
-                    // Existing marker not found
-                    // Create a new marker
-
-                    //Ask the user for a marker type
-                    MarkerDialog dialog = new MarkerDialog(getScene().getWindow());
-
-                    // If the user right-clicked, set up for an interaction
-                    dialog.setIsInteraction(event.getButton() == MouseButton.SECONDARY);
-
-                    //Move the dialog to the position of the cursor
-                    dialog.setX(event.getScreenX());
-                    dialog.setY(event.getScreenY());
-                    dialog.showAndWait();
-
-                    if (!dialog.success()) {
-                        // Do nothing
-                        return;
-                    }
-
-                    Marker marker = dialog.createMarker();
-                    marker.setPosition(markerPoint);
-
-                    getMarkers().add(marker);
-                    repaint();
-
-                    event.consume();
+                    // TODO
+                    
                 }
-                catch (NotInFrameException | IllegalArgumentException ex) {
-                    //Ignore this click
+                catch (NotInFrameException ex) {
+                    Logger.getLogger(FrameCanvas.class.getName()).log(Level.SEVERE, null, ex);
                 }
 
             }
@@ -158,17 +92,7 @@ public class FrameCanvas extends PaintableCanvas {
             @Override
             public void handle(KeyEvent event) {
 
-                // Get the in-frame position based on the last mouse move
-                if (lastMouseMove == null) {
-                    return;
-                }
-                try {
-                    getMarkers().add(createMarkerFromKey(lastMouseMove, event));
-                    repaint();
-                }
-                catch (NotInFrameException | IllegalArgumentException ex) {
-
-                }
+                // TODO
 
             }
         });
@@ -224,18 +148,8 @@ public class FrameCanvas extends PaintableCanvas {
             gc.drawImage(image.get(), imageTopLeftX, imageTopLeftY, imageWidth, imageHeight);
 
             gc.save();
-            //Draw markers
-            for (Marker marker : getMarkers()) {
-                gc.setStroke(marker.getColor());
-
-                final double imageXRatio = marker.getX() / image.get().getWidth();
-                final double imageYRatio = marker.getY() / image.get().getHeight();
-
-                final double canvasX = imageTopLeftX + imageWidth * imageXRatio;
-                final double canvasY = imageTopLeftY + imageHeight * imageYRatio;
-
-                marker.paint(gc, canvasX, canvasY);
-            }
+            
+            // TODO: Draw things
 
             gc.restore();
         }
@@ -346,23 +260,12 @@ public class FrameCanvas extends PaintableCanvas {
         return image;
     }
 
-    /**
-     * Sets the markers.
-     * The given list will be copied, so changes to it will not affect
-     * the displayed markers.
-     * <p>
-     * @param newMarkers
-     */
-    public final void setMarkers(List<Marker> newMarkers) {
-        if (newMarkers == null) {
-            throw new IllegalArgumentException("The marker list must not be null");
+    public void setTrajectories(List<Trajectory> trajectories) {
+        if(trajectories == null) {
+            throw new IllegalArgumentException("The trajectory list must not be null");
         }
-
-        markers = newMarkers;
-    }
-
-    public final List<Marker> getMarkers() {
-        return markers;
+        
+        this.trajectories = trajectories;
     }
 
 }

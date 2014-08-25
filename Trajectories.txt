@@ -1,0 +1,26 @@
+Mode 1: Trajectory building:
+
+A marker along a trajectory has the following properties:
+	activity: enum { NotCarrying, CarryingFood, CarryingSomethingElse }
+
+A trajectory has the following properties:
+	moveType: enum { Unknown, Ascending, Descending }
+
+To start a trajectory: Left click
+	A marker is created with the user's selected ant ID and activity
+To add more points to the trajectory:
+	Left click. A marker will be created with the same ID and attributes as the last one, continuing the active trajectory.
+To add a point to the trajectory and change its attributes:
+	Shift+left click activates a dialog that allows the user to choose the attributes of that point, and to finalize the trajectory
+To add an interaction marker to the trajectory:
+	(UI TBD)
+	The software searches for a nearby interaction marker.
+	A dialog appears, asking the user to enter the ID of the met ant
+		If a nearby interaction marker has been found, the ID of that ant, and the interaction type if it is available, are pre-filled.
+	The user can change the information.
+	Once the dialog is closed, the interaction marker is created.
+		If a nearby interaction marker was found, the two are formally associated.
+
+
+
+A later step: A separate fragment that displays the interactions that do not have known other ants

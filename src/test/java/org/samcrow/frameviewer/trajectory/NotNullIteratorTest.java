@@ -1,4 +1,4 @@
-package org.samcrow.frameviewer.antracks;
+package org.samcrow.frameviewer.trajectory;
 
 import java.util.ArrayList;
 import java.util.Iterator;

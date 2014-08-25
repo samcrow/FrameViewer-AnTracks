@@ -6,8 +6,7 @@ import java.util.List;
 import java.util.logging.Logger;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
-import jfxtras.labs.dialogs.MonologFX;
-import jfxtras.labs.dialogs.MonologFXButton;
+import org.samcrow.frameviewer.trajectory.Trajectory;
 
 public class DataStoringPlaybackControlModel extends PlaybackControlModel {
 
@@ -16,11 +15,17 @@ public class DataStoringPlaybackControlModel extends PlaybackControlModel {
      */
     private FrameDataStore<Marker> dataStore;
 
+    private MultiFrameDataStore<Trajectory> trajectoryDataStore;
+
     private FrameCanvas canvas;
 
-    public DataStoringPlaybackControlModel(FrameFinder frameFinder, FrameDataStore<Marker> newDataStore) {
+    public DataStoringPlaybackControlModel(FrameFinder frameFinder,
+            FrameDataStore<Marker> newDataStore,
+            MultiFrameDataStore<Trajectory> newTrajectoryDataStore) {
+        
         super(frameFinder);
         dataStore = newDataStore;
+        trajectoryDataStore = newTrajectoryDataStore;
 
         currentFrameProperty().addListener(new ChangeListener<Number>() {
             @Override
@@ -29,19 +34,9 @@ public class DataStoringPlaybackControlModel extends PlaybackControlModel {
                 if (canvas != null) {
                     int oldFrame = oldValue.intValue();
                     int newFrame = newValue.intValue();
-                    //Save the current markers from the old frame
-                    List<Marker> markers = canvas.getMarkers();
-                    //Assign each marker the correct frame
-                    for (Marker marker : markers) {
-                        marker.setFrame(oldFrame);
-                    }
-                    dataStore.setFrameData(oldFrame, markers);
-
-
-                    //Get the markers for the new frame
-                    List<Marker> newMarkers = dataStore.getFrameData(newFrame);
-                    canvas.setMarkers(newMarkers);
                     
+                    // TODO
+
                     canvas.repaint();
                 }
                 else {
@@ -59,13 +54,17 @@ public class DataStoringPlaybackControlModel extends PlaybackControlModel {
     public final void bindMarkers(FrameCanvas canvas) {
         this.canvas = canvas;
     }
-
-    public void setDataStore(FrameDataStore<Marker> dataStore) {
-        this.dataStore = dataStore;
+    
+    public void setTrajectoryDataStore(MultiFrameDataStore<Trajectory> trajectoryDataStore) {
+        this.trajectoryDataStore = trajectoryDataStore;
         //Move to the first frame
         int firstFrame = getFirstFrame();
         setCurrentFrame(firstFrame);
-        canvas.setMarkers(this.dataStore.getFrameData(firstFrame));
+       
+        List<Trajectory> trajectories = trajectoryDataStore.getObjectsForCurrentFrame();
+        canvas.setTrajectories(trajectories);
+        
+        
         canvas.repaint();
     }
 
@@ -75,52 +74,12 @@ public class DataStoringPlaybackControlModel extends PlaybackControlModel {
      * current frame gets saved.
      */
     public void syncCurrentFrameData() {
-        final int frame = getCurrentFrame();
-        List<Marker> markers = canvas.getMarkers();
-        //Assign each marker the correct frame
-        for (Marker marker : markers) {
-            marker.setFrame(frame);
-        }
-        dataStore.setFrameData(frame, markers);
+        // TODO
     }
 
     public void undo() {
-        //Check for an item to undo
-        if(canvas.getMarkers().isEmpty()) {
-            //Error: No marker to delete
-            MonologFX dialog = new MonologFX(MonologFX.Type.ERROR);
-            dialog.setTitle("Nothing to delete");
-            dialog.setMessage("This video frame does not have any points to delete");
-            dialog.setModal(true);
-            dialog.showDialog();
-        }
-        else {
-            //Ask for confirmation
-            MonologFX dialog = new MonologFX(MonologFX.Type.QUESTION);
-            
-            MonologFXButton okButton = new MonologFXButton();
-            okButton.setType(MonologFXButton.Type.OK);
-            okButton.setLabel("OK");
-            okButton.setDefaultButton(true);
-            dialog.addButton(okButton);
-            
-            MonologFXButton cancelButton = new MonologFXButton();
-            cancelButton.setType(MonologFXButton.Type.CANCEL);
-            cancelButton.setLabel("Cancel");
-            cancelButton.setCancelButton(true);
-            dialog.addButton(cancelButton);
-            
-            dialog.setTitle("Confirm delete");
-            dialog.setMessage("Delete the most recently entered point from this frame?");
-            
-            MonologFXButton.Type result = dialog.showDialog();
-            
-            if(result == MonologFXButton.Type.OK) {
-                //Remove the last item in the list
-                canvas.getMarkers().remove(canvas.getMarkers().size() - 1 );
-                canvas.repaint();
-            }
-            
-        }
+        
+        // TODO
     }
+
 }
