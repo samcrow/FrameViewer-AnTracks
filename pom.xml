@@ -3,11 +3,11 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>org.samcrow</groupId>
-    <artifactId>FrameViewer</artifactId>
-    <version>1.5.1beta4</version>
+    <artifactId>FrameViewer-AnTracks</artifactId>
+    <version>1.5.2beta1</version>
     <packaging>jar</packaging>
 
-    <name>FrameViewer</name>
+    <name>FrameViewer-AnTracks</name>
     <url>https://github.com/samcrow/FrameViewer</url>
     
     <organization>
