@@ -116,7 +116,7 @@ public class App extends Application {
             trajectoryDataStore = new PersistentTrajectoryDataStore<>();
             saveController = new SaveStatusController(dataStore);
             FrameFinder finder = new FrameFinder(frameDir);
-            model = new DataStoringPlaybackControlModel(finder, dataStore, trajectoryDataStore);
+            model = new DataStoringPlaybackControlModel(finder, trajectoryDataStore);
 
             FrameCanvas canvas = new FrameCanvas();
             canvas.imageProperty().bind(model.currentFrameImageProperty());

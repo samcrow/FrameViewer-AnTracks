@@ -6,6 +6,12 @@ package org.samcrow.frameviewer;
  */
 public class FrameObject {
 
+    public FrameObject() {}
+    
+    public FrameObject(FrameObject other) {
+        this.frame = other.frame;
+    }
+    
     /**
      * The frame number at which this object exists
      */

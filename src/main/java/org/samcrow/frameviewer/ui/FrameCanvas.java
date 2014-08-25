@@ -6,20 +6,21 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javafx.beans.InvalidationListener;
 import javafx.beans.Observable;
+import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.event.EventHandler;
 import javafx.geometry.Point2D;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.image.Image;
 import javafx.scene.input.KeyEvent;
+import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 import org.samcrow.frameviewer.io3.Marker;
 import org.samcrow.frameviewer.PaintableCanvas;
+import org.samcrow.frameviewer.trajectory.Point;
 import org.samcrow.frameviewer.trajectory.Trajectory;
-import org.samcrow.frameviewer.io3.AntActivity;
-import org.samcrow.frameviewer.io3.AntLocation;
-import org.samcrow.frameviewer.io3.InteractionMarker;
 
 /**
  * Displays a video frame and allows it to be clicked on
@@ -32,7 +33,9 @@ public class FrameCanvas extends PaintableCanvas {
      * The image to be displayed
      */
     private final ObjectProperty<Image> image = new SimpleObjectProperty<>();
-    
+
+    private final IntegerProperty currentFrame = new SimpleIntegerProperty();
+
     private List<Trajectory> trajectories = new LinkedList<>();
 
     /**
@@ -57,6 +60,11 @@ public class FrameCanvas extends PaintableCanvas {
 
     private MouseEvent lastMouseMove;
 
+    /**
+     * The trajectory that is currently being edited
+     */
+    private Trajectory activeTrajectory = null;
+
     public FrameCanvas() {
 
         setFocusTraversable(true);
@@ -69,8 +77,83 @@ public class FrameCanvas extends PaintableCanvas {
                 try {
                     Point2D markerPoint = getFrameLocation(event);
 
-                    // TODO
-                    
+                    if (activeTrajectory == null) {
+                        // Create a new trajectory
+
+                        TrajectoryCreateDialog dialog = new TrajectoryCreateDialog(getScene().getWindow());
+                        dialog.setX(event.getScreenX());
+                        dialog.setY(event.getScreenY());
+                        dialog.showAndWait();
+                        if (dialog.succeeded()) {
+
+                            activeTrajectory = new Trajectory(getCurrentFrame(), getCurrentFrame() + 1);
+                            trajectories.add(activeTrajectory);
+                            activeTrajectory.setId(dialog.getTrajectoryId());
+                            activeTrajectory.setMoveType(dialog.getMoveType());
+
+                            // Create a new Point at the mouse location
+                            Point newPoint = new Point((int) Math.round(markerPoint.getX()), (int) Math.round(markerPoint.getY()));
+                            newPoint.setActivity(dialog.getActivity());
+                            activeTrajectory.set(getCurrentFrame(), newPoint);
+                        }
+
+                    }
+                    else {
+                        // An active trajectory already exists
+                        try {
+                            if (event.getButton() == MouseButton.SECONDARY) {
+                                // Copy the point and edit it
+                                Point newPoint = activeTrajectory.copyLastPoint();
+                                newPoint.setX((int) Math.round(markerPoint.getX()));
+                                newPoint.setY((int) Math.round(markerPoint.getY()));
+
+                                // Temporarily add the point so that it will be displayed
+                                // while the dialog is visible
+                                activeTrajectory.set(getCurrentFrame(), newPoint);
+                                repaint();
+
+                                TrajectoryEditDialog dialog = new TrajectoryEditDialog(getScene().getWindow(), activeTrajectory, newPoint);
+                                dialog.setX(event.getScreenX());
+                                dialog.setY(event.getScreenY());
+                                dialog.showAndWait();
+
+                                if (dialog.succeeded()) {
+                                    activeTrajectory.setId(dialog.getTrajectoryId());
+                                    activeTrajectory.setMoveType(dialog.getMoveType());
+                                    newPoint.setActivity(dialog.getActivity());
+
+                                    activeTrajectory.set(getCurrentFrame(), newPoint);
+                                    
+                                    if (dialog.finalizeRequested()) {
+                                    // Make this trajectory no longer active
+                                        // The list still has a strong reference to it.
+                                        activeTrajectory = null;
+                                    }
+                                }
+                                else {
+                                    // Not succeeded; Remove the new point
+                                    activeTrajectory.set(getCurrentFrame(), null);
+                                }
+
+                            }
+                            else {
+                                // Just add a new point with the same properties to the trajectory
+                                Point newPoint = activeTrajectory.copyLastPoint();
+                                newPoint.setX((int) Math.round(markerPoint.getX()));
+                                newPoint.setY((int) Math.round(markerPoint.getY()));
+
+                                activeTrajectory.set(getCurrentFrame(), newPoint);
+
+                            }
+                        }
+                        catch (IllegalStateException ex) {
+                            // Do nothing
+                        }
+
+                    }
+
+                    repaint();
+
                 }
                 catch (NotInFrameException ex) {
                     Logger.getLogger(FrameCanvas.class.getName()).log(Level.SEVERE, null, ex);
@@ -93,7 +176,6 @@ public class FrameCanvas extends PaintableCanvas {
             public void handle(KeyEvent event) {
 
                 // TODO
-
             }
         });
 
@@ -148,8 +230,11 @@ public class FrameCanvas extends PaintableCanvas {
             gc.drawImage(image.get(), imageTopLeftX, imageTopLeftY, imageWidth, imageHeight);
 
             gc.save();
-            
-            // TODO: Draw things
+
+            // Draw trajectories
+            for (Trajectory trajectory : trajectories) {
+                trajectory.paint(gc, image.get().getWidth(), image.get().getHeight(), imageWidth, imageHeight, imageTopLeftX, imageTopLeftY, getCurrentFrame());
+            }
 
             gc.restore();
         }
@@ -158,47 +243,8 @@ public class FrameCanvas extends PaintableCanvas {
 
     private Marker createMarkerFromKey(MouseEvent location, KeyEvent keyEvent) throws NotInFrameException {
         Point2D screenPos = getFrameLocation(location);
-        if (keyEvent.getCharacter().equals("i")) {
-            // Interaction: entrance chamber, both ants walking and 2 way interaction
-            InteractionMarker marker = new InteractionMarker(screenPos, AntActivity.Walking, AntLocation.EntranceChamber, AntActivity.Walking, AntLocation.EntranceChamber);
-            marker.setType(InteractionMarker.InteractionType.TwoWay);
-            marker.setAntId(MarkerDialog.getLastAntId());
 
-            return marker;
-        }
-        else if (keyEvent.getCharacter().equals("x")) {
-            // Not an interaction: Focal ant, walking, exit
-            Marker marker = new Marker(screenPos, AntActivity.Walking, AntLocation.AtExit);
-            marker.setAntId(MarkerDialog.getLastAntId());
-            return marker;
-        }
-        else if (keyEvent.getCharacter().equals("e")) {
-            // Not an interaction: Focal ant, walking, entrance chamber
-            Marker marker = new Marker(screenPos, AntActivity.Walking, AntLocation.EntranceChamber);
-            marker.setAntId(MarkerDialog.getLastAntId());
-            return marker;
-        }
-        else if (keyEvent.getCharacter().equals("t")) {
-            // Not an interaction: Focal ant, walking, tunnel
-            Marker marker = new Marker(screenPos, AntActivity.Walking, AntLocation.AtTunnel);
-            marker.setAntId(MarkerDialog.getLastAntId());
-            return marker;
-        }
-        else if(keyEvent.getCharacter().equals("g")) {
-            // Not an interaction: Focal ant walking, edge
-            Marker marker = new Marker(screenPos, AntActivity.Walking, AntLocation.Edge);
-            marker.setAntId(MarkerDialog.getLastAntId());
-            return marker;
-        }
-        else if(keyEvent.getCharacter().equals("o")) {
-            // Not an interaction: Focal ant walking, outside
-            Marker marker = new Marker(screenPos, AntActivity.Walking, AntLocation.Outside);
-            marker.setAntId(MarkerDialog.getLastAntId());
-            return marker;
-        }
-        else {
-            throw new IllegalArgumentException("No marker default corresponding to this key");
-        }
+        throw new IllegalArgumentException("No marker default corresponding to this key");
 
     }
 
@@ -261,11 +307,23 @@ public class FrameCanvas extends PaintableCanvas {
     }
 
     public void setTrajectories(List<Trajectory> trajectories) {
-        if(trajectories == null) {
+        if (trajectories == null) {
             throw new IllegalArgumentException("The trajectory list must not be null");
         }
-        
+
         this.trajectories = trajectories;
+    }
+
+    public final int getCurrentFrame() {
+        return currentFrame.get();
+    }
+
+    public final void setCurrentFrame(int newFrame) {
+        currentFrame.set(newFrame);
+    }
+
+    public final IntegerProperty currentFrameProperty() {
+        return currentFrame;
     }
 
 }

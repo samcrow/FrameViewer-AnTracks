@@ -1,6 +1,5 @@
 package org.samcrow.frameviewer;
 
-import org.samcrow.frameviewer.io3.Marker;
 import org.samcrow.frameviewer.ui.FrameCanvas;
 import java.util.List;
 import java.util.logging.Logger;
@@ -10,21 +9,14 @@ import org.samcrow.frameviewer.trajectory.Trajectory;
 
 public class DataStoringPlaybackControlModel extends PlaybackControlModel {
 
-    /**
-     * The data store from which frames are read
-     */
-    private FrameDataStore<Marker> dataStore;
-
     private MultiFrameDataStore<Trajectory> trajectoryDataStore;
 
     private FrameCanvas canvas;
 
     public DataStoringPlaybackControlModel(FrameFinder frameFinder,
-            FrameDataStore<Marker> newDataStore,
             MultiFrameDataStore<Trajectory> newTrajectoryDataStore) {
         
         super(frameFinder);
-        dataStore = newDataStore;
         trajectoryDataStore = newTrajectoryDataStore;
 
         currentFrameProperty().addListener(new ChangeListener<Number>() {
@@ -53,6 +45,8 @@ public class DataStoringPlaybackControlModel extends PlaybackControlModel {
      */
     public final void bindMarkers(FrameCanvas canvas) {
         this.canvas = canvas;
+        
+        this.canvas.currentFrameProperty().bind(this.currentFrameProperty());
     }
     
     public void setTrajectoryDataStore(MultiFrameDataStore<Trajectory> trajectoryDataStore) {
