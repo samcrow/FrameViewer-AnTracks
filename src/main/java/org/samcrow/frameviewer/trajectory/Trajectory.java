@@ -88,6 +88,7 @@ public class Trajectory implements MultiFrameObject, Iterable<Point> {
         // Ensure that capacity is available for this point
         int index = frameNumberToIndex(frame);
         ensureCapacityForFrame(frame);
+        updateLastFrame(frame);
 
         points.set(index, newPoint);
         // Set the correct frame for the point
@@ -201,6 +202,9 @@ public class Trajectory implements MultiFrameObject, Iterable<Point> {
         while (points.size() <= index) {
             points.add(null);
         }
+    }
+    
+    private void updateLastFrame(int frame) {
         // Correct the last frame
         if(lastFrame < frame) {
             lastFrame = frame;
