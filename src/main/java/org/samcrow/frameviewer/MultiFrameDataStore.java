@@ -1,15 +1,14 @@
 package org.samcrow.frameviewer;
 
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import javafx.beans.InvalidationListener;
-import javafx.beans.Observable;
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.value.ObservableValueBase;
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
+import org.samcrow.frameviewer.trajectory.Trajectory;
 
 /**
  * Stores data associated with frames. Each frame can have any number
@@ -26,7 +25,7 @@ import javafx.collections.ObservableList;
  */
 public class MultiFrameDataStore<T extends MultiFrameObject> extends ObservableValueBase<MultiFrameDataStore<T>> implements Iterable<T> {
 
-    private final List<T> data = createList();
+    protected final List<T> data = createList();
 
     /**
      * The current frame for which data is returned
@@ -77,6 +76,10 @@ public class MultiFrameDataStore<T extends MultiFrameObject> extends ObservableV
             data.add(null);
         }
     }
+    
+    public void add(T object) {
+       data.add(object);
+    }
 
     public final IntegerProperty currentFrameProperty() {
         return currentFrame;
@@ -103,19 +106,7 @@ public class MultiFrameDataStore<T extends MultiFrameObject> extends ObservableV
      * @return
      */
     private <T2> List<T2> createList() {
-        ObservableList<T2> list = FXCollections.observableList(new LinkedList<T2>());
-
-        if (invalidationListener == null) {
-            invalidationListener = new InvalidationListener() {
-                @Override
-                public void invalidated(Observable o) {
-                    fireValueChangedEvent();
-                }
-            };
-        }
-        list.addListener(invalidationListener);
-
-        return list;
+        return new ArrayList<>();
     }
 
     /**

@@ -1,5 +1,7 @@
 package org.samcrow.frameviewer.trajectory;
 
+import java.io.IOException;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -8,6 +10,7 @@ import javafx.geometry.Point2D;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.paint.Color;
 import org.samcrow.frameviewer.MultiFrameObject;
+import org.samcrow.frameviewer.io3.DatabaseTrajectoryDataStore;
 
 /**
  * Stores a trajectory from AnTracks
@@ -244,5 +247,36 @@ public class Trajectory implements MultiFrameObject, Iterable<Point> {
         }
         
     }
+    
+    // Persistence section
+    
+    private DatabaseTrajectoryDataStore dataStore;
+
+    public DatabaseTrajectoryDataStore getDataStore() {
+        return dataStore;
+    }
+
+    public void setDataStore(DatabaseTrajectoryDataStore dataStore) {
+        this.dataStore = dataStore;
+    }
+    
+    /**
+     * Saves this trajectory and all its points
+     * @throws java.io.IOException
+     */
+    public void save() throws IOException {
+        if(dataStore != null) {
+            try {
+                dataStore.persistTrajectory(this);
+            }
+            catch (SQLException ex) {
+                throw new IOException(ex);
+            }
+        }
+        else {
+            throw new IllegalStateException("Can't call save() on a Trajectory with no datastore defined");
+        }
+    }
+    
 
 }

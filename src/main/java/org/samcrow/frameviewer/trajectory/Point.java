@@ -86,10 +86,7 @@ public class Point extends FrameObject {
         if (this.x != other.x) {
             return false;
         }
-        if (this.y != other.y) {
-            return false;
-        }
-        return true;
+        return this.y == other.y;
     }
 
     public int getX() {
