@@ -92,5 +92,10 @@
             <artifactId>guava</artifactId>
             <version>13.0.1</version>
         </dependency>
+        <dependency>
+            <groupId>org.xerial</groupId>
+            <artifactId>sqlite-jdbc</artifactId>
+            <version>3.8.5-pre1</version>
+        </dependency>
     </dependencies>
 </project>

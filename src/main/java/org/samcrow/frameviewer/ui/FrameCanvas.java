@@ -233,13 +233,13 @@ public class FrameCanvas extends PaintableCanvas {
                 ((InteractionPoint) nearbyPoint).setFocalAntId(trajectoryWithNearbyPoint.getId());
             }
 
-            newPoint = new InteractionPoint((InteractionPoint) nearbyPoint);
+            newPoint = InteractionPoint.inverted((InteractionPoint) nearbyPoint);
             newPoint.setX((int) Math.round(frameLocation.getX()));
             newPoint.setY((int) Math.round(frameLocation.getY()));
             newPoint.setOtherPoint((InteractionPoint) nearbyPoint);
         }
         else {
-            newPoint = InteractionPoint.inverted((InteractionPoint) nearbyPoint);
+            newPoint = new InteractionPoint((int) Math.round(frameLocation.getX()), (int) Math.round(frameLocation.getY()));
             newPoint.setFocalAntId(activeTrajectory.getId());
             newPoint.setFocalAntActivity(activeTrajectory.getLastPoint().getActivity());
         }

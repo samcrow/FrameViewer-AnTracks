@@ -51,6 +51,8 @@ public enum InteractionType {
                 return Performed;
             case TwoWay:
                 return TwoWay;
+            case Unknown:
+                return Unknown;
             
             default:
                 throw new IllegalArgumentException();
