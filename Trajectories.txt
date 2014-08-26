@@ -11,9 +11,9 @@ To start a trajectory: Left click
 To add more points to the trajectory:
 	Left click. A marker will be created with the same ID and attributes as the last one, continuing the active trajectory.
 To add a point to the trajectory and change its attributes:
-	Shift+left click activates a dialog that allows the user to choose the attributes of that point, and to finalize the trajectory
+	Right click activates a dialog that allows the user to choose the attributes of that point, and to finalize the trajectory
 To add an interaction marker to the trajectory:
-	(UI TBD)
+	Shift + left click
 	The software searches for a nearby interaction marker.
 	A dialog appears, asking the user to enter the ID of the met ant
 		If a nearby interaction marker has been found, the ID of that ant, and the interaction type if it is available, are pre-filled.

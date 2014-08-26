@@ -104,6 +104,9 @@ public class TrajectoryCreateDialog extends Stage {
         moveTypeBox.setValue(Trajectory.MoveType.Unknown);
         activityBox.setValue(Point.Activity.NotCarrying);
         
+        // Focus on ID field
+        antIdField.requestFocus();
+        
         final Scene scene = new Scene(root, root.getPrefWidth(), root.getPrefHeight());
         setScene(scene);
     }

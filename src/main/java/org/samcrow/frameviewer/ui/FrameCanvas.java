@@ -2,6 +2,7 @@ package org.samcrow.frameviewer.ui;
 
 import java.util.LinkedList;
 import java.util.List;
+import java.util.ListIterator;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javafx.beans.InvalidationListener;
@@ -19,6 +20,7 @@ import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 import org.samcrow.frameviewer.io3.Marker;
 import org.samcrow.frameviewer.PaintableCanvas;
+import org.samcrow.frameviewer.trajectory.InteractionPoint;
 import org.samcrow.frameviewer.trajectory.Point;
 import org.samcrow.frameviewer.trajectory.Trajectory;
 
@@ -101,7 +103,10 @@ public class FrameCanvas extends PaintableCanvas {
                     else {
                         // An active trajectory already exists
                         try {
-                            if (event.getButton() == MouseButton.SECONDARY) {
+                            if (event.isShiftDown()) {
+                                createInteractionMarker(markerPoint);
+                            }
+                            else if (event.getButton() == MouseButton.SECONDARY) {
                                 // Copy the point and edit it
                                 Point newPoint = activeTrajectory.copyLastPoint();
                                 newPoint.setX((int) Math.round(markerPoint.getX()));
@@ -123,9 +128,9 @@ public class FrameCanvas extends PaintableCanvas {
                                     newPoint.setActivity(dialog.getActivity());
 
                                     activeTrajectory.set(getCurrentFrame(), newPoint);
-                                    
+
                                     if (dialog.finalizeRequested()) {
-                                    // Make this trajectory no longer active
+                                        // Make this trajectory no longer active
                                         // The list still has a strong reference to it.
                                         activeTrajectory = null;
                                     }
@@ -187,6 +192,77 @@ public class FrameCanvas extends PaintableCanvas {
                 repaint();
             }
         });
+    }
+
+    private void createInteractionMarker(Point2D frameLocation) {
+
+        Point nearbyPoint = null;
+        Trajectory trajectoryWithNearbyPoint = null;
+        // Search for a nearby Point that has the same frame number as this frame
+        for(Trajectory trajectory : trajectories) {
+            // Ignore the trajectory that is currently being edited
+            if(trajectory == activeTrajectory) {
+                continue;
+            }
+
+            try {
+                Point point = trajectory.get(getCurrentFrame());
+
+                if (point != null) {
+                    if (pointClicked(point.getX(), point.getY(), frameLocation)) {
+                        nearbyPoint = point;
+                        trajectoryWithNearbyPoint = trajectory;
+                        break;
+                    }
+                }
+            }
+            catch (IndexOutOfBoundsException ex) {
+                // No point from that trajectory
+                // Do nothing
+            }
+        }
+
+        // Now nearbyPoint is either null or an existing point on the current frame
+        InteractionPoint newPoint;
+        if (nearbyPoint != null) {
+            // Make it an InteractionPoint, if it is not already one
+            if (!(nearbyPoint instanceof InteractionPoint)) {
+                nearbyPoint = new InteractionPoint(nearbyPoint);
+                trajectoryWithNearbyPoint.set(getCurrentFrame(), nearbyPoint);
+                nearbyPoint.setActivity(trajectoryWithNearbyPoint.getLastPoint().getActivity());
+                ((InteractionPoint) nearbyPoint).setFocalAntId(trajectoryWithNearbyPoint.getId());
+            }
+
+            newPoint = new InteractionPoint((InteractionPoint) nearbyPoint);
+            newPoint.setX((int) Math.round(frameLocation.getX()));
+            newPoint.setY((int) Math.round(frameLocation.getY()));
+            newPoint.setOtherPoint((InteractionPoint) nearbyPoint);
+        }
+        else {
+            newPoint = InteractionPoint.inverted((InteractionPoint) nearbyPoint);
+            newPoint.setFocalAntId(activeTrajectory.getId());
+            newPoint.setFocalAntActivity(activeTrajectory.getLastPoint().getActivity());
+        }
+        // Temporarily insert the point, so that it will be visible when the dialog appears
+        activeTrajectory.set(getCurrentFrame(), newPoint);
+        repaint();
+
+        InteractionPointDialog dialog = new InteractionPointDialog(getScene().getWindow(), newPoint);
+        dialog.showAndWait();
+        if (dialog.success()) {
+
+            newPoint.setFocalAntId(dialog.getFocalAntId());
+            newPoint.setMetAntId(dialog.getMetAntId());
+            newPoint.setFocalAntActivity(dialog.getFocalAntActivity());
+            newPoint.setMetAntActivity(dialog.getMetAntActivity());
+            newPoint.setType(dialog.getInteractionType());
+
+        }
+        else {
+            // Remove the point
+            activeTrajectory.set(getCurrentFrame(), null);
+        }
+
     }
 
     @Override
@@ -285,9 +361,9 @@ public class FrameCanvas extends PaintableCanvas {
         return new Point2D(image.get().getWidth() * xRatio, image.get().getHeight() * yRatio);
     }
 
-    private boolean markerClicked(Marker marker, Point2D frameLocation) {
+    private boolean pointClicked(double x, double y, Point2D frameLocation) {
         final int radius = 6;
-        return radius >= frameLocation.distance(marker.getX(), marker.getY());
+        return radius >= frameLocation.distance(x, y);
 
     }
 

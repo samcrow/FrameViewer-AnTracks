@@ -158,22 +158,30 @@ public class Trajectory implements MultiFrameObject, Iterable<Point> {
     }
 
     /**
-     * Creates and returns a copy of the Point that was most recently added.
+     * Creates and returns a copy of the Point corresponding to the highest numbered frame.
      * @throws IllegalStateException if this trajectory does not contain any points
      * @return 
      */
     public Point copyLastPoint() {
+        return new Point(getLastPoint());
+    }
+    
+    /**
+     * Returns a reference to the Point corresponding to the highest numbered frame.
+     * @return 
+     */
+    public Point getLastPoint() {
         // Find the last point
         // Create an iterator pointing past the last element
         ListIterator<Point> iter = points.listIterator(points.size());
         while(iter.hasPrevious()) {
             Point point = iter.previous();
             if(point != null) {
-                return new Point(point);
+                return point;
             }
         }
         
-        throw new IllegalStateException("A copy of the last point cannot be returned when no points are in the trajectory");
+        throw new IllegalStateException("The last point cannot be returned when no points are in the trajectory");
     }
     
     /**
@@ -192,6 +200,10 @@ public class Trajectory implements MultiFrameObject, Iterable<Point> {
 
         while (points.size() <= index) {
             points.add(null);
+        }
+        // Correct the last frame
+        if(lastFrame < frame) {
+            lastFrame = frame;
         }
     }
 
