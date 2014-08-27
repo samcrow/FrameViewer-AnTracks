@@ -9,10 +9,10 @@ import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import java.util.List;
 import org.samcrow.frameviewer.MultiFrameDataStore;
 import org.samcrow.frameviewer.trajectory.InteractionPoint;
 import org.samcrow.frameviewer.trajectory.InteractionType;
@@ -83,6 +83,50 @@ public class DatabaseTrajectoryDataStore extends MultiFrameDataStore<Trajectory>
         }
 
         return instance;
+    }
+
+    /**
+     * Refreshes the data from the database
+     * <p>
+     * @throws java.io.IOException
+     */
+    public void refresh() throws IOException {
+        try (ResultSet trajectories = selectTrajectories()) {
+
+            final List<Trajectory> updated = new ArrayList<>();
+            
+            while (trajectories.next()) {
+                final Trajectory existingTrajectory = findTrajectoryById(trajectories.getInt("trajectory_id"));
+                
+                if(existingTrajectory != null) {
+                    // Propagate properties from the database trajectory to the existing one
+                
+                    existingTrajectory.setMoveType(Trajectory.MoveType.valueOf(trajectories.getString("move_type")));
+                    
+                    // Points
+                    try (ResultSet points = selectPointsInTrajectory(existingTrajectory.getId())) {
+                        while(points.next()) {
+                            final int frame = points.getInt("frame_number");
+                            final Point existingPoint = existingTrajectory.get(frame);
+                            if(existingPoint != null) {
+                                // Update this point
+                                existingPoint.setActivity(Point.Activity.valueOf(points.getString("activity")));
+                                existingPoint.setX(points.getInt("frame_x"));
+                                existingPoint.setY(points.getInt("frame_y"));
+                            }
+                            else {
+                                // Add a point
+                                existingTrajectory.set(frame, pointFromResultSet(points));
+                            }
+                        }
+                    }
+                }
+            }
+
+        }
+        catch (SQLException ex) {
+            throw new IOException(ex);
+        }
     }
 
     private static void initDatabaseDriver() throws ClassNotFoundException {
@@ -357,6 +401,43 @@ public class DatabaseTrajectoryDataStore extends MultiFrameDataStore<Trajectory>
         }
     }
 
+    /**
+     * Finds a trajectory with the requested ID in this instance's list
+     * and returns it, or null if none exists
+     * <p>
+     * @param trajectoryId
+     * @return
+     */
+    private Trajectory findTrajectoryById(int trajectoryId) {
+        // Because the results are ordered by trajectory ID,
+        // binary search can be used
+        final int foundIndex = Collections.binarySearch(data,
+                        new Trajectory(1, 2, trajectoryId),
+                        new Comparator<Trajectory>() {
+
+                            @Override
+                            public int compare(Trajectory o1, Trajectory o2) {
+                                if (o1.getId() < o2.getId()) {
+                                    return -1;
+                                }
+                                else if (o1.getId() > o2.getId()) {
+                                    return 1;
+                                }
+                                else {
+                                    return 0;
+                                }
+                            }
+
+                        });
+
+        if (foundIndex <= 0) {
+            return data.get(foundIndex);
+        }
+        else {
+            return null;
+        }
+    }
+
     private void connectInteractionPoints() throws SQLException {
         for (Trajectory trajectory : data) {
             for (Point point : trajectory) {
@@ -368,33 +449,13 @@ public class DatabaseTrajectoryDataStore extends MultiFrameDataStore<Trajectory>
                         final int targetTrajectoryId = iPoint.getMetAntId();
                         final int targetFrame = iPoint.getFrame();
 
-                        // Because the results are ordered by trajectory ID,
-                        // binary search can be used
-                        final int foundIndex
-                                = Collections.binarySearch(data,
-                                        new Trajectory(1, 2, targetTrajectoryId),
-                                        new Comparator<Trajectory>() {
-
-                                            @Override
-                                            public int compare(Trajectory o1, Trajectory o2) {
-                                                if (o1.getId() < o2.getId()) {
-                                                    return -1;
-                                                }
-                                                else if (o1.getId() > o2.getId()) {
-                                                    return 1;
-                                                }
-                                                else {
-                                                    return 0;
-                                                }
-                                            }
-
-                                        });
-
-                        if (foundIndex >= 0) {
+                        final Trajectory foundTrajectory = findTrajectoryById(targetTrajectoryId);
+                        
+                        if (foundTrajectory != null) {
                             // Found trajectory
                             // Look for the frame
                             try {
-                                final Point matchingPoint = data.get(foundIndex).get(targetFrame);
+                                final Point matchingPoint = foundTrajectory.get(targetFrame);
 
                                 if (matchingPoint != null) {
 
