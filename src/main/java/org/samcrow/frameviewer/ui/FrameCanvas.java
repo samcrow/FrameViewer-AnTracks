@@ -7,8 +7,10 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javafx.beans.InvalidationListener;
 import javafx.beans.Observable;
+import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.event.EventHandler;
@@ -62,6 +64,8 @@ public class FrameCanvas extends PaintableCanvas {
      */
     private double imageHeight;
 
+    private final BooleanProperty showTrajectories = new SimpleBooleanProperty(true);
+    
     private MouseEvent lastMouseMove;
 
     private DatabaseTrajectoryDataStore dataStore;
@@ -208,6 +212,20 @@ public class FrameCanvas extends PaintableCanvas {
                 repaint();
             }
         });
+        
+        // Repaint when the trajectory display state changes
+        showTrajectories.addListener(new InvalidationListener() {
+            @Override
+            public void invalidated(Observable o) {
+                // Update trajectories 
+                if (dataStore != null) {
+                    trajectories = dataStore.getObjectsNearCurrentFrame(20);
+                }
+
+                requestFocus();
+                repaint();
+            }
+        });
     }
 
     private void createInteractionMarker(Point2D frameLocation) {
@@ -329,14 +347,16 @@ public class FrameCanvas extends PaintableCanvas {
 
             gc.drawImage(image.get(), imageTopLeftX, imageTopLeftY, imageWidth, imageHeight);
 
-            gc.save();
+            if(isShowingTrajectories()) {
+                gc.save();
 
-            // Draw trajectories
-            for (Trajectory trajectory : trajectories) {
-                trajectory.paint(gc, image.get().getWidth(), image.get().getHeight(), imageWidth, imageHeight, imageTopLeftX, imageTopLeftY, getCurrentFrame());
+                // Draw trajectories
+                for (Trajectory trajectory : trajectories) {
+                    trajectory.paint(gc, image.get().getWidth(), image.get().getHeight(), imageWidth, imageHeight, imageTopLeftX, imageTopLeftY, getCurrentFrame());
+                }
+
+                gc.restore();
             }
-
-            gc.restore();
         }
 
     }
@@ -454,4 +474,15 @@ public class FrameCanvas extends PaintableCanvas {
         }
     }
 
+    
+    public final boolean isShowingTrajectories() {
+        return showTrajectories.get();
+    }
+    public final void setShowingTrajectories(boolean showTrajectories) {
+        this.showTrajectories.set(showTrajectories);
+    }
+    public final BooleanProperty showingTrajectoriesProperty() {
+        return showTrajectories;
+    }
+    
 }

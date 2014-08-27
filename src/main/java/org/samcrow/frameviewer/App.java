@@ -83,7 +83,7 @@ public class App extends Application {
             box.getChildren().add(bar);
 
             dataStore = new PersistentFrameDataStore<>();
-            trajectoryDataStore = DatabaseTrajectoryDataStore.readFrom("192.168.3.100", "FrameViewer", "FrameViewer", "FrameViewer");
+            trajectoryDataStore = DatabaseTrajectoryDataStore.readFrom("127.0.0.1", "FrameViewer", "FrameViewer", "FrameViewer");
             saveController = new SaveStatusController(dataStore);
             FrameFinder finder = new FrameFinder(frameDir);
             model = new DataStoringPlaybackControlModel(finder, trajectoryDataStore);
@@ -97,6 +97,10 @@ public class App extends Application {
 
             PlaybackControlPane controls = new PlaybackControlPane(model);
             box.getChildren().add(controls);
+            
+            // Hook up the trajectory display toggle
+            controls.setTrajectoriesDisplayed(true);
+            canvas.showingTrajectoriesProperty().bind(controls.trajectoriesDisplayedProperty());
 
             //Assemble the root StackPane
             StackPane root = new StackPane();
