@@ -255,6 +255,7 @@ public class FrameCanvas extends PaintableCanvas {
             // Propagate properties from the last point to the new point
             newPoint.setFocalAntId(activeTrajectory.getId());
             newPoint.setFocalAntActivity(activeTrajectory.getLastPoint().getActivity());
+            newPoint.setMetAntId(trajectoryWithNearbyPoint.getId());
             
             newPoint.setOtherPoint((InteractionPoint) nearbyPoint);
         }

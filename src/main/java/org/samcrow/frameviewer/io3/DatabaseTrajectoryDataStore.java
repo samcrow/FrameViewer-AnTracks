@@ -405,19 +405,8 @@ public class DatabaseTrajectoryDataStore extends MultiFrameDataStore<Trajectory>
 
                                     }
                                     else {
-                                        Logger.getLogger(DatabaseTrajectoryDataStore.class.getName())
-                                                .log(Level.WARNING, "In trajectory {0} at frame {1},"
-                                                        + " found an interaction marker with a "
-                                                        + "corresponding trajectory with ID {2},"
-                                                        + " but the point at that frame is not"
-                                                        + " an InteractionPoint."
-                                                        + " Demoting to Marker.",
-                                                        new Object[]{trajectory.getId(),
-                                                            targetFrame, targetTrajectoryId});
-                                        // Demote in the database
-                                        demoteFromInteraction(iPoint, trajectory.getId());
-                                        // Demote in the trajectory
-                                        trajectory.set(iPoint.getFrame(), new Point(iPoint));
+                                        // Point not an InteractionPoint
+                                        // Do nothing
                                     }
                                 }
                                 else {
