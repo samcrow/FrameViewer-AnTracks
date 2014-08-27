@@ -113,6 +113,35 @@ public class DatabaseTrajectoryDataStore extends MultiFrameDataStore<Trajectory>
                                 existingPoint.setActivity(Point.Activity.valueOf(points.getString("activity")));
                                 existingPoint.setX(points.getInt("frame_x"));
                                 existingPoint.setY(points.getInt("frame_y"));
+                                
+                                if(existingPoint instanceof InteractionPoint) {
+                                    final InteractionPoint iPoint = (InteractionPoint) existingPoint;
+                                    
+                                    // Check if the point should be preserved as an interaction point
+                                    if(points.getBoolean("is_interaction")) {
+
+                                        iPoint.setType(InteractionType.valueOf(points.getString("interaction_type")));
+                                        iPoint.setMetAntActivity(Point.Activity.valueOf(points.getString("interaction_met_ant_activity")));
+                                        iPoint.setMetAntId(points.getInt("interaction_met_trajectory_id"));
+                                    }
+                                    else {
+                                        demoteFromInteraction(iPoint, frame);
+                                    }
+                                }
+                                else {
+                                    // Not an interaction point
+                                    // Check if it should be promoted
+                                    if(points.getBoolean("is_interaction")) {
+                                        // Promote
+                                        final InteractionPoint iPoint = new InteractionPoint(existingPoint);
+                                        iPoint.setType(InteractionType.valueOf(points.getString("interaction_type")));
+                                        iPoint.setMetAntActivity(Point.Activity.valueOf(points.getString("interaction_met_ant_activity")));
+                                        iPoint.setMetAntId(points.getInt("interaction_met_trajectory_id"));
+                                        // Put the promoted point into the trajectory
+                                        existingTrajectory.set(frame, iPoint);
+                                    }
+                                }
+                                
                             }
                             else {
                                 // Add a point
