@@ -9,6 +9,10 @@ import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.samcrow.frameviewer.MultiFrameDataStore;
 import org.samcrow.frameviewer.trajectory.InteractionPoint;
 import org.samcrow.frameviewer.trajectory.InteractionType;
@@ -23,16 +27,14 @@ public class DatabaseTrajectoryDataStore extends MultiFrameDataStore<Trajectory>
 
     private Connection connection;
 
-
-
     public static DatabaseTrajectoryDataStore readFrom(String host, String database, String username, String password) throws IOException {
         DatabaseTrajectoryDataStore instance = new DatabaseTrajectoryDataStore();
         try {
             initDatabaseDriver();
             // Create the connection
-            instance.connection = DriverManager.getConnection("jdbc:mysql://"+host+"/"+database, username, password);
+            instance.connection = DriverManager.getConnection("jdbc:mysql://" + host + "/" + database, username, password);
             instance.checkSchema();
-            
+
             try (ResultSet trajectories = instance.selectTrajectories()) {
                 while (trajectories.next()) {
 
@@ -49,7 +51,7 @@ public class DatabaseTrajectoryDataStore extends MultiFrameDataStore<Trajectory>
                             trajectory = new Trajectory(firstPoint.getFrame(), firstPoint.getFrame() + 1, trajectoryId);
                             trajectory.setMoveType(moveType);
                             trajectory.setDataStore(instance);
-                            
+
                             trajectory.set(firstPoint.getFrame(), firstPoint);
                         }
                         else {
@@ -70,6 +72,8 @@ public class DatabaseTrajectoryDataStore extends MultiFrameDataStore<Trajectory>
                     }
                 }
             }
+            // Now that the trajectories are known, hook up the relations among the InteractionPoints
+            instance.connectInteractionPoints();
         }
         catch (ClassNotFoundException ex) {
             throw new IOException("Could not load database driver", ex);
@@ -211,20 +215,36 @@ public class DatabaseTrajectoryDataStore extends MultiFrameDataStore<Trajectory>
                 statement.executeUpdate("UPDATE `points` SET "
                         + "`frame_x` = " + point.getX() + ','
                         + "`frame_y` = " + point.getY() + ','
-                        + "`activity` = " + point.getActivity().name() + ','
+                        + "`activity` = '" + point.getActivity().name() + "',"
                         + "`is_interaction` = 1,"
                         + "`interaction_met_trajectory_id` = " + iPoint.getMetAntId() + ','
                         + "`interaction_type` = '" + iPoint.getType().name() + "',"
-                        + "`interaction_ant_met_activity` = '" + iPoint.getMetAntActivity().name() + '\''
+                        + "`interaction_met_ant_activity` = '" + iPoint.getMetAntActivity().name() + '\''
                         + " WHERE  `trajectory_id` = " + trajectoryId + " AND `frame_number` = " + point.getFrame());
             }
             else {
-                statement.executeUpdate("UPDATE `points` SET"
+                statement.executeUpdate("UPDATE `points` SET "
                         + "`frame_x` = " + point.getX() + ','
                         + "`frame_y` = " + point.getY() + ','
                         + "`activity` = '" + point.getActivity().name() + '\''
                         + " WHERE  `trajectory_id` = " + trajectoryId + " AND `frame_number` = " + point.getFrame());
             }
+        }
+    }
+
+    /**
+     * Demotes a point's entry in the database so that it is no longer an
+     * interaction
+     * <p>
+     * @param point
+     * @param trajectoryId
+     * @throws java.sql.SQLException
+     */
+    private void demoteFromInteraction(InteractionPoint point, int trajectoryId) throws SQLException {
+        try (Statement statement = connection.createStatement()) {
+            statement.executeUpdate("UPDATE `points` SET"
+                    + "`is_interaction` = 0"
+                    + " WHERE  `trajectory_id` = " + trajectoryId + " AND `frame_number` = " + point.getFrame());
         }
     }
 
@@ -270,7 +290,7 @@ public class DatabaseTrajectoryDataStore extends MultiFrameDataStore<Trajectory>
                         + point.getY() + ','
                         + '\'' + point.getActivity().name() + '\''
                         + ")";
-                
+
                 statement.executeUpdate(query);
             }
         }
@@ -334,6 +354,89 @@ public class DatabaseTrajectoryDataStore extends MultiFrameDataStore<Trajectory>
         }
         catch (SQLException ex) {
             throw new IOException(ex);
+        }
+    }
+
+    private void connectInteractionPoints() throws SQLException {
+        for (Trajectory trajectory : data) {
+            for (Point point : trajectory) {
+                if (point instanceof InteractionPoint) {
+                    InteractionPoint iPoint = (InteractionPoint) point;
+
+                    if (iPoint.getOtherPoint() == null) {
+                        // Find and assign the other point
+                        final int targetTrajectoryId = iPoint.getMetAntId();
+                        final int targetFrame = iPoint.getFrame();
+
+                        // Because the results are ordered by trajectory ID,
+                        // binary search can be used
+                        final int foundIndex
+                                = Collections.binarySearch(data,
+                                        new Trajectory(1, 2, targetTrajectoryId),
+                                        new Comparator<Trajectory>() {
+
+                                            @Override
+                                            public int compare(Trajectory o1, Trajectory o2) {
+                                                if (o1.getId() < o2.getId()) {
+                                                    return -1;
+                                                }
+                                                else if (o1.getId() > o2.getId()) {
+                                                    return 1;
+                                                }
+                                                else {
+                                                    return 0;
+                                                }
+                                            }
+
+                                        });
+
+                        if (foundIndex >= 0) {
+                            // Found trajectory
+                            // Look for the frame
+                            try {
+                                final Point matchingPoint = data.get(foundIndex).get(targetFrame);
+
+                                if (matchingPoint != null) {
+
+                                    if (matchingPoint instanceof InteractionPoint) {
+
+                                        ((InteractionPoint) matchingPoint).setOtherPoint(iPoint);
+                                        iPoint.setOtherPoint((InteractionPoint) matchingPoint);
+
+                                    }
+                                    else {
+                                        Logger.getLogger(DatabaseTrajectoryDataStore.class.getName())
+                                                .log(Level.WARNING, "In trajectory {0} at frame {1},"
+                                                        + " found an interaction marker with a "
+                                                        + "corresponding trajectory with ID {2},"
+                                                        + " but the point at that frame is not"
+                                                        + " an InteractionPoint."
+                                                        + " Demoting to Marker.",
+                                                        new Object[]{trajectory.getId(),
+                                                            targetFrame, targetTrajectoryId});
+                                        // Demote in the database
+                                        demoteFromInteraction(iPoint, trajectory.getId());
+                                        // Demote in the trajectory
+                                        trajectory.set(iPoint.getFrame(), new Point(iPoint));
+                                    }
+                                }
+                                else {
+                                    // No point
+                                    // Do nothing
+                                }
+                            }
+                            catch (IndexOutOfBoundsException ex) {
+                                // No point
+                                // Do nothing
+                            }
+                        }
+                        else {
+                            // No trajectory
+                            // Do nothing
+                        }
+                    }
+                }
+            }
         }
     }
 

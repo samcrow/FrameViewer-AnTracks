@@ -1,6 +1,5 @@
 package org.samcrow.frameviewer.ui;
 
-import java.io.IOException;
 import java.sql.SQLException;
 import java.util.LinkedList;
 import java.util.List;
@@ -158,6 +157,7 @@ public class FrameCanvas extends PaintableCanvas {
                                 newPoint.setY((int) Math.round(markerPoint.getY()));
 
                                 activeTrajectory.set(getCurrentFrame(), newPoint);
+                                saveActiveTrajectory();
 
                             }
                         }
@@ -252,9 +252,14 @@ public class FrameCanvas extends PaintableCanvas {
             newPoint = InteractionPoint.inverted((InteractionPoint) nearbyPoint);
             newPoint.setX((int) Math.round(frameLocation.getX()));
             newPoint.setY((int) Math.round(frameLocation.getY()));
+            // Propagate properties from the last point to the new point
+            newPoint.setFocalAntId(activeTrajectory.getId());
+            newPoint.setFocalAntActivity(activeTrajectory.getLastPoint().getActivity());
+            
             newPoint.setOtherPoint((InteractionPoint) nearbyPoint);
         }
         else {
+            // No nearby point; just create a new point
             newPoint = new InteractionPoint((int) Math.round(frameLocation.getX()), (int) Math.round(frameLocation.getY()));
             newPoint.setFocalAntId(activeTrajectory.getId());
             newPoint.setFocalAntActivity(activeTrajectory.getLastPoint().getActivity());
@@ -273,6 +278,8 @@ public class FrameCanvas extends PaintableCanvas {
             newPoint.setMetAntActivity(dialog.getMetAntActivity());
             newPoint.setType(dialog.getInteractionType());
 
+            saveActiveTrajectory();
+            saveTrajectory(trajectoryWithNearbyPoint);
         }
         else {
             // Remove the point
@@ -428,9 +435,13 @@ public class FrameCanvas extends PaintableCanvas {
     }
 
     private void saveActiveTrajectory() {
-        if (activeTrajectory != null && dataStore != null) {
+        saveTrajectory(activeTrajectory);
+    }
+    
+    private void saveTrajectory(Trajectory trajectory) {
+        if (trajectory != null && dataStore != null) {
             try {
-                dataStore.persistTrajectory(activeTrajectory);
+                dataStore.persistTrajectory(trajectory);
             }
             catch (SQLException ex) {
                 MonologFX errorDialog = new MonologFX(MonologFX.Type.ERROR);

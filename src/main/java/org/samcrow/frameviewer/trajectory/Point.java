@@ -48,7 +48,7 @@ public class Point extends FrameObject {
 
     private int y;
     
-    private Activity activity;
+    protected Activity activity;
 
     public Point(int x, int y) {
         this.x = x;

@@ -67,6 +67,9 @@ public class InteractionPoint extends Point {
 
     public final void setFocalAntActivity(Activity focalAntActivity) {
         setActivity(focalAntActivity);
+        if(otherPoint != null) {
+            otherPoint.metAntActivity = focalAntActivity;
+        }
     }
 
     public Activity getMetAntActivity() {
@@ -75,6 +78,9 @@ public class InteractionPoint extends Point {
 
     public void setMetAntActivity(Activity metAnActivity) {
         this.metAntActivity = metAnActivity;
+        if(otherPoint != null) {
+            otherPoint.activity = metAnActivity;
+        }
     }
 
     public InteractionType getType() {
@@ -85,7 +91,8 @@ public class InteractionPoint extends Point {
         this.type = type;
         if(otherPoint != null) {
             // Set the type of the other marker
-            otherPoint.setType(type.invert());
+            // Don't call setType() because that will cause stack overflow
+            otherPoint.type = type.invert();
         }
     }
 
@@ -103,6 +110,9 @@ public class InteractionPoint extends Point {
 
     public void setFocalAntId(int focalAntId) {
         this.focalAntId = focalAntId;
+        if(otherPoint != null) {
+            otherPoint.metAntId = focalAntId;
+        }
     }
 
     public int getMetAntId() {
@@ -111,6 +121,9 @@ public class InteractionPoint extends Point {
 
     public void setMetAntId(int metAntId) {
         this.metAntId = metAntId;
+        if(otherPoint != null) {
+            otherPoint.focalAntId = metAntId;
+        }
     }
 
     @Override
