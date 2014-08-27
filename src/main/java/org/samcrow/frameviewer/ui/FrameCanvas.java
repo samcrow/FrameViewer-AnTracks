@@ -1,6 +1,7 @@
 package org.samcrow.frameviewer.ui;
 
 import java.io.IOException;
+import java.sql.SQLException;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.logging.Level;
@@ -18,6 +19,7 @@ import javafx.scene.image.Image;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
+import jfxtras.labs.dialogs.MonologFX;
 import org.samcrow.frameviewer.io3.Marker;
 import org.samcrow.frameviewer.PaintableCanvas;
 import org.samcrow.frameviewer.io3.DatabaseTrajectoryDataStore;
@@ -62,7 +64,7 @@ public class FrameCanvas extends PaintableCanvas {
     private double imageHeight;
 
     private MouseEvent lastMouseMove;
-    
+
     private DatabaseTrajectoryDataStore dataStore;
 
     /**
@@ -102,6 +104,7 @@ public class FrameCanvas extends PaintableCanvas {
                             Point newPoint = new Point((int) Math.round(markerPoint.getX()), (int) Math.round(markerPoint.getY()));
                             newPoint.setActivity(dialog.getActivity());
                             activeTrajectory.set(getCurrentFrame(), newPoint);
+                            saveActiveTrajectory();
                         }
 
                     }
@@ -118,7 +121,7 @@ public class FrameCanvas extends PaintableCanvas {
                                 newPoint.setY((int) Math.round(markerPoint.getY()));
 
                                 // Temporarily add the point so that it will be displayed
-                                // while the dialog is visible
+                                // while the errorDialog is visible
                                 activeTrajectory.set(getCurrentFrame(), newPoint);
                                 repaint();
 
@@ -133,10 +136,10 @@ public class FrameCanvas extends PaintableCanvas {
                                     newPoint.setActivity(dialog.getActivity());
 
                                     activeTrajectory.set(getCurrentFrame(), newPoint);
+                                    // Save the trajectory
+                                    saveActiveTrajectory();
 
                                     if (dialog.finalizeRequested()) {
-                                        // Save the trajectory
-                                        activeTrajectory.save();
                                         // Make this trajectory no longer active
                                         // The list still has a strong reference to it.
                                         activeTrajectory = null;
@@ -160,9 +163,6 @@ public class FrameCanvas extends PaintableCanvas {
                         }
                         catch (IllegalStateException ex) {
                             // Do nothing
-                        }
-                        catch (IOException ex) {
-                            Logger.getLogger(FrameCanvas.class.getName()).log(Level.SEVERE, null, ex);
                         }
 
                     }
@@ -198,12 +198,12 @@ public class FrameCanvas extends PaintableCanvas {
         image.addListener(new InvalidationListener() {
             @Override
             public void invalidated(Observable o) {
-                
+
                 // Update trajectories 
-                if(dataStore != null) {
+                if (dataStore != null) {
                     trajectories = dataStore.getObjectsNearCurrentFrame(20);
                 }
-                
+
                 requestFocus();
                 repaint();
             }
@@ -215,9 +215,9 @@ public class FrameCanvas extends PaintableCanvas {
         Point nearbyPoint = null;
         Trajectory trajectoryWithNearbyPoint = null;
         // Search for a nearby Point that has the same frame number as this frame
-        for(Trajectory trajectory : trajectories) {
+        for (Trajectory trajectory : trajectories) {
             // Ignore the trajectory that is currently being edited
-            if(trajectory == activeTrajectory) {
+            if (trajectory == activeTrajectory) {
                 continue;
             }
 
@@ -259,7 +259,7 @@ public class FrameCanvas extends PaintableCanvas {
             newPoint.setFocalAntId(activeTrajectory.getId());
             newPoint.setFocalAntActivity(activeTrajectory.getLastPoint().getActivity());
         }
-        // Temporarily insert the point, so that it will be visible when the dialog appears
+        // Temporarily insert the point, so that it will be visible when the errorDialog appears
         activeTrajectory.set(getCurrentFrame(), newPoint);
         repaint();
 
@@ -426,7 +426,20 @@ public class FrameCanvas extends PaintableCanvas {
         this.dataStore = dataStore;
         trajectories = dataStore.getObjectsNearCurrentFrame(20);
     }
-    
-    
+
+    private void saveActiveTrajectory() {
+        if (activeTrajectory != null && dataStore != null) {
+            try {
+                dataStore.persistTrajectory(activeTrajectory);
+            }
+            catch (SQLException ex) {
+                MonologFX errorDialog = new MonologFX(MonologFX.Type.ERROR);
+                errorDialog.setTitle("Error: Trajectory not saved");
+                errorDialog.setMessage(ex.toString());
+                errorDialog.showDialog();
+                ex.printStackTrace();
+            }
+        }
+    }
 
 }

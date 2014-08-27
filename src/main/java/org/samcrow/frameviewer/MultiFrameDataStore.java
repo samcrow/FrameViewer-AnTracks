@@ -8,7 +8,6 @@ import javafx.beans.InvalidationListener;
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.value.ObservableValueBase;
-import org.samcrow.frameviewer.trajectory.Trajectory;
 
 /**
  * Stores data associated with frames. Each frame can have any number
@@ -54,10 +53,10 @@ public class MultiFrameDataStore<T extends MultiFrameObject> extends ObservableV
         List<T> list = new LinkedList<>();
         
         for(T object : this) {
-            final int firstFrameDifference = getCurrentFrame() - object.getFirstFrame();
-            final int lastFrameDifference = object.getLastFrame() - getCurrentFrame();
+            final int firstFrameDifference = object.getFirstFrame() - getCurrentFrame();
+            final int lastFrameDifference = getCurrentFrame() - object.getLastFrame();
             
-            if(firstFrameDifference > -range && lastFrameDifference > -range) {
+            if(firstFrameDifference < range && lastFrameDifference < range) {
                 list.add(object);
             }
         }

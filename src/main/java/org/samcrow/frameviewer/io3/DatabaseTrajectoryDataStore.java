@@ -147,8 +147,8 @@ public class DatabaseTrajectoryDataStore extends MultiFrameDataStore<Trajectory>
     private void updateTrajectory(Trajectory trajectory) throws SQLException {
         try (Statement statement = connection.createStatement()) {
             statement.executeUpdate("UPDATE `trajectories` SET "
-                    + "`move_type` = " + trajectory.getMoveType().name()
-                    + " WHERE `trajectory_id` = " + trajectory.getId());
+                    + "`move_type` = '" + trajectory.getMoveType().name() + '\''
+                    + " WHERE `trajectory_id` = '" + trajectory.getId() + '\'');
         }
 
         // Update all points
@@ -248,11 +248,11 @@ public class DatabaseTrajectoryDataStore extends MultiFrameDataStore<Trajectory>
                         + point.getFrame() + ','
                         + point.getX() + ','
                         + point.getY() + ','
-                        + point.getActivity().name() + ','
+                        + '\'' + point.getActivity().name() + "',"
                         + "1," // is interaction
                         + iPoint.getMetAntId() + ','
-                        + iPoint.getType().name() + ','
-                        + iPoint.getMetAntActivity().name()
+                        + '\'' + iPoint.getType().name() + "',"
+                        + '\'' + iPoint.getMetAntActivity().name() + '\''
                         + ")");
 
             }

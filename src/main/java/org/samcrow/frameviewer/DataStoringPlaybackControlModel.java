@@ -18,6 +18,9 @@ public class DataStoringPlaybackControlModel extends PlaybackControlModel {
         
         super(frameFinder);
         trajectoryDataStore = newTrajectoryDataStore;
+        
+        // Bind frame number
+        newTrajectoryDataStore.currentFrameProperty().bind(currentFrameProperty());
 
         currentFrameProperty().addListener(new ChangeListener<Number>() {
             @Override

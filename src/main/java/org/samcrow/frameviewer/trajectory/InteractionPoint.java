@@ -1,5 +1,8 @@
 package org.samcrow.frameviewer.trajectory;
 
+import javafx.scene.canvas.GraphicsContext;
+import javafx.scene.paint.Color;
+
 /**
  * A point that marks an interaction
  * <p>
@@ -108,6 +111,22 @@ public class InteractionPoint extends Point {
 
     public void setMetAntId(int metAntId) {
         this.metAntId = metAntId;
+    }
+
+    @Override
+    public void paint(GraphicsContext gc, double canvasX, double canvasY, boolean hilighted) {
+        gc.save();
+        gc.setFill(Color.YELLOW);
+        final int RADIUS = 7;
+        gc.fillOval(canvasX - RADIUS, canvasY - RADIUS, 2 * RADIUS, 2 * RADIUS);
+        if(hilighted) {
+            final int HILIGHT_RADIUS = RADIUS + 1;
+            gc.setLineWidth(1);
+            gc.setStroke(Color.RED);
+            gc.strokeOval(canvasX - HILIGHT_RADIUS , canvasY - HILIGHT_RADIUS, 2 * HILIGHT_RADIUS, 2 * HILIGHT_RADIUS);
+        }
+        
+        gc.restore();
     }
     
     

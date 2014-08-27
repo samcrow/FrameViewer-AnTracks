@@ -7,7 +7,6 @@ import org.samcrow.frameviewer.ui.PlaybackControlPane;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
-import java.text.ParseException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javafx.application.Application;
@@ -23,14 +22,10 @@ import javafx.scene.layout.VBox;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
-import javafx.stage.WindowEvent;
 import jfxtras.labs.dialogs.MonologFX;
-import jfxtras.labs.dialogs.MonologFXButton;
 import org.samcrow.frameviewer.io3.DatabaseTrajectoryDataStore;
 import org.samcrow.frameviewer.io3.Marker;
 import org.samcrow.frameviewer.io3.PersistentFrameDataStore;
-import org.samcrow.frameviewer.io3.PersistentTrajectoryDataStore;
-import org.samcrow.frameviewer.ui.SaveDialog;
 
 /**
  * Hello world!
@@ -59,31 +54,6 @@ public class App extends Application {
     @Override
     public void start(final Stage stage) {
         this.stage = stage;
-
-        stage.setOnCloseRequest(new EventHandler<WindowEvent>() {
-            @Override
-            public void handle(WindowEvent event) {
-                if (saveController.hasUnsavedData()) {
-                    //Ask to save
-                    SaveDialog dialog = new SaveDialog();
-                    dialog.initOwner(stage);
-
-                    MonologFXButton.Type returnType = dialog.showDialog();
-                    if (returnType == MonologFXButton.Type.CANCEL) {
-                        //Cancel close
-                        event.consume();
-
-                    }
-                    else if (returnType == MonologFXButton.Type.NO) {
-                        //Don't save; allow close
-                    }
-                    else {
-                        saveFile();
-
-                    }
-                }
-            }
-        });
 
         try {
 
