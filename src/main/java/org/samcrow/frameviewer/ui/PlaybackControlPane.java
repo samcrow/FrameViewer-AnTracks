@@ -1,9 +1,11 @@
 package org.samcrow.frameviewer.ui;
 
+import javafx.beans.property.BooleanProperty;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
+import javafx.scene.control.CheckBox;
 import javafx.scene.control.Label;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyCodeCombination;
@@ -30,6 +32,8 @@ public class PlaybackControlPane extends HBox {
     
     private final PlaybackControlModel model;
     
+    // Trajectory display box
+    private final CheckBox trajectoryDisplayBox;
     
     public PlaybackControlPane(PlaybackControlModel model) {
         this.model = model;
@@ -121,6 +125,16 @@ public class PlaybackControlPane extends HBox {
             setMargin(playForwardButton, PADDING);
         }
         
+        {
+            trajectoryDisplayBox = new CheckBox("Show trajectories");
+            getChildren().add(trajectoryDisplayBox);
+            setMargin(trajectoryDisplayBox, PADDING);
+        }
+        
+    }
+    
+    public final BooleanProperty trajectoriesDisplayedProperty() {
+        return trajectoryDisplayBox.selectedProperty();
     }
     
     /**

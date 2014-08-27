@@ -97,6 +97,9 @@ public class App extends Application {
 
             PlaybackControlPane controls = new PlaybackControlPane(model);
             box.getChildren().add(controls);
+            
+            // Hook up the trajectory display toggle
+            canvas.showingTrajectoriesProperty().bind(controls.trajectoriesDisplayedProperty());
 
             //Assemble the root StackPane
             StackPane root = new StackPane();
