@@ -212,6 +212,20 @@ public class FrameCanvas extends PaintableCanvas {
                 repaint();
             }
         });
+        
+        // Repaint when the trajectory display state changes
+        showTrajectories.addListener(new InvalidationListener() {
+            @Override
+            public void invalidated(Observable o) {
+                // Update trajectories 
+                if (dataStore != null) {
+                    trajectories = dataStore.getObjectsNearCurrentFrame(20);
+                }
+
+                requestFocus();
+                repaint();
+            }
+        });
     }
 
     private void createInteractionMarker(Point2D frameLocation) {

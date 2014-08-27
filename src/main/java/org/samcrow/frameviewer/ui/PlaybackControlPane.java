@@ -133,6 +133,14 @@ public class PlaybackControlPane extends HBox {
         
     }
     
+    public final void setTrajectoriesDisplayed(boolean displayed) {
+        trajectoryDisplayBox.setSelected(displayed);
+    }
+    
+    public final boolean isTrajectoriesDisplayed() {
+        return trajectoryDisplayBox.isSelected();
+    }
+    
     public final BooleanProperty trajectoriesDisplayedProperty() {
         return trajectoryDisplayBox.selectedProperty();
     }
