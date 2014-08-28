@@ -3,9 +3,9 @@ package org.samcrow.frameviewer.trajectory.ui;
 import javafx.geometry.Point2D;
 import javafx.scene.input.MouseEvent;
 import org.samcrow.frameviewer.PaintableCanvas;
+import org.samcrow.frameviewer.trajectory.InteractionPoint;
 import org.samcrow.frameviewer.trajectory.Point;
 import org.samcrow.frameviewer.trajectory.Trajectory;
-import org.samcrow.frameviewer.ui.TrajectoryCreateDialog;
 
 /**
  * Controller for edit mode
@@ -41,20 +41,46 @@ public class EditModeController extends FrameController {
 
         // Look for a point to edit
         if (activePoint != null) {
-            TrajectoryCreateDialog dialog = new TrajectoryCreateDialog(getScene().getWindow(), activeTrajectory, activePoint);
-            dialog.setX(event.getScreenX());
-            dialog.setY(event.getScreenY());
+            
+            PointEditDialog dialog = new PointEditDialog(activeTrajectory, activePoint, getScene().getWindow());
             dialog.showAndWait();
 
-            if (dialog.succeeded()) {
+            if(dialog.result == PointEditDialog.Result.Save) {
+                
                 activeTrajectory.setId(dialog.getTrajectoryId());
                 activeTrajectory.setMoveType(dialog.getMoveType());
                 activePoint.setActivity(dialog.getActivity());
-
+                if(dialog.isInteraction()) {
+                    // Promote point if needed
+                    if(!(activePoint instanceof InteractionPoint)) {
+                        activePoint = new InteractionPoint(activePoint);
+                    }
+                    // Propagate
+                    final InteractionPoint iPoint = (InteractionPoint) activePoint;
+                    iPoint.setType(dialog.getInteractionType());
+                    iPoint.setMetAntId(dialog.getMetTrajectoryId());
+                    iPoint.setMetAntActivity(dialog.getMetTrajectoryActivity());
+                }
+                else {
+                    // Demote point if needed
+                    if(activePoint instanceof InteractionPoint) {
+                        activePoint = new Point(activePoint);
+                    }
+                }
                 
-                // Save the trajectory
-                save(activeTrajectory);
-
+                save(activePoint, activeTrajectory.getId());
+                repaint();
+            }
+            else if(dialog.result == PointEditDialog.Result.DeletePoint) {
+                delete(activePoint, activeTrajectory.getId());
+                activeTrajectory.set(getCurrentFrame(), null);
+                repaint();
+            }
+            else if(dialog.result == PointEditDialog.Result.DeleteTrajectory) {
+                getTrajectories().remove(activeTrajectory);
+                delete(activeTrajectory);
+                activeTrajectory = null;
+                repaint();
             }
         }
 

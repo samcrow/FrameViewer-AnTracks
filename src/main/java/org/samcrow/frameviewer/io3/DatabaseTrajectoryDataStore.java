@@ -54,7 +54,7 @@ public class DatabaseTrajectoryDataStore extends MultiFrameDataStore<Trajectory>
                         }
                         else {
                             System.err.println("Got a trajectory with ID " + trajectoryId + " that does not have any points. This trajectory will be deleted.");
-                            instance.deleteTrajectory(trajectoryId);
+                            instance.deleteTrajectoryFromDatabaseOnly(trajectoryId);
                             // Proceed to the next trajectory
                             continue;
                         }
@@ -176,7 +176,14 @@ public class DatabaseTrajectoryDataStore extends MultiFrameDataStore<Trajectory>
         }
     }
 
-    public void deleteTrajectory(int trajectoryId) throws SQLException {
+    public void deleteTrajectory(Trajectory trajectory) throws SQLException {
+        final int trajectoryId = trajectory.getId();
+        deleteTrajectoryFromDatabaseOnly(trajectoryId);
+        // Remove the trajectory from the local data
+        data.remove(trajectory);
+    }
+    
+    private void deleteTrajectoryFromDatabaseOnly(int trajectoryId) throws SQLException {
         try (Statement statement = connection.createStatement()) {
             statement.executeUpdate("DELETE FROM `points` WHERE `trajectory_id`=" + trajectoryId);
             // Then delete the trajectory
@@ -224,7 +231,8 @@ public class DatabaseTrajectoryDataStore extends MultiFrameDataStore<Trajectory>
                 statement.executeUpdate("UPDATE `points` SET "
                         + "`frame_x` = " + point.getX() + ','
                         + "`frame_y` = " + point.getY() + ','
-                        + "`activity` = '" + point.getActivity().name() + '\''
+                        + "`activity` = '" + point.getActivity().name() + "',"
+                        + "`is_interaction` = 0"
                         + " WHERE  `trajectory_id` = " + trajectoryId + " AND `frame_number` = " + point.getFrame());
             }
         }

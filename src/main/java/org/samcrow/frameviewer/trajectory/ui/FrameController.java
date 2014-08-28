@@ -212,6 +212,32 @@ public class FrameController {
             ex.printStackTrace();
         }
     }
+    
+    protected final void delete(Trajectory trajectory) {
+        try {
+            getDataStore().deleteTrajectory(trajectory);
+        }
+        catch (SQLException ex) {
+            MonologFX dialog = new MonologFX(MonologFX.Type.ERROR);
+            dialog.setTitle(ex.toString());
+            dialog.setMessage(ExceptionUtils.getFullStackTrace(ex));
+            dialog.showDialog();
+            ex.printStackTrace();
+        }
+    }
+    
+    protected final void delete(Point point, int trajectoryId) {
+        try {
+            getDataStore().deletePoint(trajectoryId, point.getFrame());
+        }
+        catch (SQLException ex) {
+            MonologFX dialog = new MonologFX(MonologFX.Type.ERROR);
+            dialog.setTitle(ex.toString());
+            dialog.setMessage(ExceptionUtils.getFullStackTrace(ex));
+            dialog.showDialog();
+            ex.printStackTrace();
+        }
+    }
 
     protected final void repaint() {
         canvas.repaint();

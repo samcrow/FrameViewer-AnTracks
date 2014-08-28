@@ -1,5 +1,6 @@
 package org.samcrow.frameviewer.trajectory;
 
+import java.util.Objects;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.paint.Color;
 
@@ -150,8 +151,44 @@ public class InteractionPoint extends Point {
         
         gc.restore();
     }
+
+    @Override
+    public int hashCode() {
+        int hash = 3;
+        hash = 59 * hash + this.focalAntId;
+        hash = 59 * hash + this.metAntId;
+        hash = 59 * hash + Objects.hashCode(this.metAntActivity);
+        hash = 59 * hash + Objects.hashCode(this.type);
+        hash = 59 * hash + Objects.hashCode(this.otherPoint);
+        return hash;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == null) {
+            return false;
+        }
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+        final InteractionPoint other = (InteractionPoint) obj;
+        if (this.focalAntId != other.focalAntId) {
+            return false;
+        }
+        if (this.metAntId != other.metAntId) {
+            return false;
+        }
+        if (this.metAntActivity != other.metAntActivity) {
+            return false;
+        }
+        if (this.type != other.type) {
+            return false;
+        }
+        return Objects.equals(this.otherPoint, other.otherPoint);
+    }
     
     
     
 
+    
 }
