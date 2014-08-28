@@ -20,11 +20,30 @@ import org.samcrow.frameviewer.io3.DatabaseTrajectoryDataStore;
 public class Trajectory implements MultiFrameObject, Iterable<Point> {
 
     public static enum MoveType {
+
         Unknown,
         Ascending,
-        Descending,
+        Descending,;
+
+        /**
+         * Returns the type corresponding to a name, but never
+         * throws an exception. Returns Unknown if a valid value
+         * could not be found.
+         * <p>
+         * @param name
+         * @return
+         */
+        public static MoveType safeValueOf(String name) {
+            try {
+                return valueOf(name);
+            }
+            catch (Exception ex) {
+                return Unknown;
+            }
+        }
+
     }
-    
+
     /**
      * The first frame for which this trajectory has a position
      */
@@ -36,8 +55,9 @@ public class Trajectory implements MultiFrameObject, Iterable<Point> {
     private int lastFrame;
 
     private int id;
-    
+
     private MoveType moveType;
+
     /**
      * The points in this trajectory.
      * <p>
@@ -95,7 +115,7 @@ public class Trajectory implements MultiFrameObject, Iterable<Point> {
 
         points.set(index, newPoint);
         // Set the correct frame for the point
-        if(newPoint != null) {
+        if (newPoint != null) {
             newPoint.setFrame(frame);
         }
     }
@@ -151,8 +171,6 @@ public class Trajectory implements MultiFrameObject, Iterable<Point> {
         return new NotNullIterator<>(underlying);
     }
 
-    
-
     public MoveType getMoveType() {
         return moveType;
     }
@@ -162,32 +180,37 @@ public class Trajectory implements MultiFrameObject, Iterable<Point> {
     }
 
     /**
-     * Creates and returns a copy of the Point corresponding to the highest numbered frame.
-     * @throws IllegalStateException if this trajectory does not contain any points
-     * @return 
+     * Creates and returns a copy of the Point corresponding to the highest
+     * numbered frame.
+     * <p>
+     * @throws IllegalStateException if this trajectory does not contain any
+     * points
+     * @return
      */
     public Point copyLastPoint() {
         return new Point(getLastPoint());
     }
-    
+
     /**
-     * Returns a reference to the Point corresponding to the highest numbered frame.
-     * @return 
+     * Returns a reference to the Point corresponding to the highest numbered
+     * frame.
+     * <p>
+     * @return
      */
     public Point getLastPoint() {
         // Find the last point
         // Create an iterator pointing past the last element
         ListIterator<Point> iter = points.listIterator(points.size());
-        while(iter.hasPrevious()) {
+        while (iter.hasPrevious()) {
             Point point = iter.previous();
-            if(point != null) {
+            if (point != null) {
                 return point;
             }
         }
-        
+
         throw new IllegalStateException("The last point cannot be returned when no points are in the trajectory");
     }
-    
+
     /**
      * Verifies that a frame number is within the expected range,
      * and converts it into a list index
@@ -206,10 +229,10 @@ public class Trajectory implements MultiFrameObject, Iterable<Point> {
             points.add(null);
         }
     }
-    
+
     private void updateLastFrame(int frame) {
         // Correct the last frame
-        if(lastFrame < frame) {
+        if (lastFrame < frame) {
             lastFrame = frame;
         }
     }
@@ -227,29 +250,28 @@ public class Trajectory implements MultiFrameObject, Iterable<Point> {
             double imageTopLeftX, double imageTopLeftY, int currentFrame) {
 
         Point2D lastLocation = null;
-        for(Point point : this) {
+        for (Point point : this) {
             final double xRatio = point.getX() / nativeImageWidth;
             final double yRatio = point.getY() / nativeImageHeight;
             final double canvasX = imageTopLeftX + xRatio * actualImageWidth;
             final double canvasY = imageTopLeftY + yRatio * actualImageHeight;
-            
+
             // Draw a line from the last point to this one
-            if(lastLocation != null) {
+            if (lastLocation != null) {
                 gc.setStroke(Color.LIGHTGREEN);
                 gc.strokeLine(lastLocation.getX(), lastLocation.getY(), canvasX, canvasY);
             }
-            
+
             final boolean hilighted = currentFrame == point.getFrame();
             // Draw the marker
             point.paint(gc, canvasX, canvasY, hilighted);
-            
+
             lastLocation = new Point2D(canvasX, canvasY);
         }
-        
+
     }
-    
+
     // Persistence section
-    
     private DatabaseTrajectoryDataStore dataStore;
 
     public DatabaseTrajectoryDataStore getDataStore() {
@@ -259,13 +281,14 @@ public class Trajectory implements MultiFrameObject, Iterable<Point> {
     public void setDataStore(DatabaseTrajectoryDataStore dataStore) {
         this.dataStore = dataStore;
     }
-    
+
     /**
      * Saves this trajectory and all its points
+     * <p>
      * @throws java.io.IOException
      */
     public void save() throws IOException {
-        if(dataStore != null) {
+        if (dataStore != null) {
             try {
                 dataStore.persistTrajectory(this);
             }
@@ -277,6 +300,5 @@ public class Trajectory implements MultiFrameObject, Iterable<Point> {
             throw new IllegalStateException("Can't call save() on a Trajectory with no datastore defined");
         }
     }
-    
 
 }
