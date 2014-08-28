@@ -31,18 +31,10 @@ public class App extends Application {
     
     private DatabaseTrajectoryDataStore trajectoryDataStore;
 
-    /**
-     * The file that was last opened
-     */
-    private File lastOpenedFile;
-
-    private Stage stage;
-
     private DataStoringPlaybackControlModel model;
 
     @Override
     public void start(final Stage stage) {
-        this.stage = stage;
 
         try {
 
