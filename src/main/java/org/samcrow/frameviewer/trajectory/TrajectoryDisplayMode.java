@@ -7,11 +7,6 @@ package org.samcrow.frameviewer.trajectory;
 public enum TrajectoryDisplayMode {
     
     /**
-     * Trajectories not displayed
-     */
-    Hidden,
-    
-    /**
      * Every point of every trajectory is displayed
      */
     Full,
@@ -27,5 +22,10 @@ public enum TrajectoryDisplayMode {
      * is displayed
      */
     Interpolated,
+    
+    /**
+     * Trajectories not displayed
+     */
+    Hidden,
     
 }
