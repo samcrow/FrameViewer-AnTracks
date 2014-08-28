@@ -1,7 +1,6 @@
 package org.samcrow.frameviewer.io3;
 
 import java.io.Closeable;
-import java.io.File;
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
@@ -25,37 +24,24 @@ import org.samcrow.frameviewer.trajectory.Trajectory;
  */
 public class DatabaseTrajectoryDataStore extends MultiFrameDataStore<Trajectory> implements Closeable, AutoCloseable {
 
-    private Connection connection;
+    private final Connection connection;
 
-    public static DatabaseTrajectoryDataStore readFrom(String host, String database, String username, String password) throws IOException {
-        DatabaseTrajectoryDataStore instance = new DatabaseTrajectoryDataStore();
-        try {
-            initDatabaseDriver();
-            // Create the connection
-            instance.connection = DriverManager.getConnection("jdbc:mysql://" + host + "/" + database, username, password);
-            instance.checkSchema();
+    public DatabaseTrajectoryDataStore(Connection connection) throws SQLException {
+        this.connection = connection;
+        checkSchema();
 
-            try (ResultSet trajectories = instance.selectTrajectories()) {
-                while (trajectories.next()) {
+        try (ResultSet trajectories = selectTrajectories()) {
+            while (trajectories.next()) {
 
-                    final Trajectory trajectory = instance.createTrajectoryAndPoints(trajectories);
-                    if(trajectory != null) {
-                        // Add this trajectory to the instance's list
-                        instance.data.add(trajectory);
-                    }
+                final Trajectory trajectory = createTrajectoryAndPoints(trajectories);
+                if (trajectory != null) {
+                    // Add this trajectory to the instance's list
+                    data.add(trajectory);
                 }
             }
-            // Now that the trajectories are known, hook up the relations among the InteractionPoints
-            instance.connectInteractionPoints();
         }
-        catch (ClassNotFoundException ex) {
-            throw new IOException("Could not load database driver", ex);
-        }
-        catch (SQLException ex) {
-            throw new IOException(ex);
-        }
-
-        return instance;
+        // Now that the trajectories are known, hook up the relations among the InteractionPoints
+        connectInteractionPoints();
     }
 
     /**
@@ -122,19 +108,19 @@ public class DatabaseTrajectoryDataStore extends MultiFrameDataStore<Trajectory>
                             }
                         }
                     }
-                    
+
                     // Mark the trajectory updated
                     updated.add(existingTrajectory);
                 }
                 else {
                     // Create a new trajectory
                     final Trajectory trajectory = createTrajectoryAndPoints(trajectories);
-                    if(trajectory != null) {
+                    if (trajectory != null) {
                         updated.add(trajectory);
                     }
                 }
             }
-            
+
             // Clear the existing data and put the updated trajectories in
             data.clear();
             data.addAll(updated);
@@ -440,12 +426,6 @@ public class DatabaseTrajectoryDataStore extends MultiFrameDataStore<Trajectory>
         point.setActivity(Point.Activity.safeValueOf(result.getString("activity")));
 
         return point;
-    }
-
-    private void createConnection(File databaseFile) throws ClassNotFoundException, SQLException {
-        initDatabaseDriver();
-        connection = DriverManager.getConnection("jdbc:sqlite:" + databaseFile.getAbsolutePath());
-        checkSchema();
     }
 
     @Override

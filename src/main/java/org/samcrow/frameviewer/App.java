@@ -22,6 +22,7 @@ import javafx.stage.Stage;
 import jfxtras.labs.dialogs.MonologFX;
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.samcrow.frameviewer.io3.DatabaseTrajectoryDataStore;
+import org.samcrow.frameviewer.ui.db.DatabaseConnectionDialog;
 
 /**
  * Hello world!
@@ -35,9 +36,8 @@ public class App extends Application {
 
     @Override
     public void start(final Stage stage) {
-
+        
         try {
-
             // Check for command-line frame directory
             File frameDir;
             if (getParameters().getNamed().containsKey("frame-directory")) {
@@ -62,7 +62,14 @@ public class App extends Application {
             bar.setUseSystemMenuBar(true);
             box.getChildren().add(bar);
 
-            trajectoryDataStore = DatabaseTrajectoryDataStore.readFrom("192.168.3.100", "FrameViewer", "FrameViewer", "FrameViewer");
+            // Ask the user for a connection
+            DatabaseConnectionDialog dialog = new DatabaseConnectionDialog("mysql");
+            dialog.showAndWait();
+            if(!dialog.succeeded()) {
+                stop();
+            }
+            
+            trajectoryDataStore = new DatabaseTrajectoryDataStore(dialog.getConnection());
             FrameFinder finder = new FrameFinder(frameDir);
             model = new DataStoringPlaybackControlModel(finder, trajectoryDataStore);
 
