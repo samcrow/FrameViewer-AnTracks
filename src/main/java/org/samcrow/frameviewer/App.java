@@ -1,12 +1,10 @@
 package org.samcrow.frameviewer;
 
-import java.io.ByteArrayOutputStream;
 import org.samcrow.frameviewer.ui.CanvasPane;
 import org.samcrow.frameviewer.ui.FrameCanvas;
 import org.samcrow.frameviewer.ui.PlaybackControlPane;
 import java.io.File;
 import java.io.IOException;
-import java.io.PrintStream;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javafx.application.Application;
@@ -20,41 +18,23 @@ import javafx.scene.input.KeyCombination;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.DirectoryChooser;
-import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import jfxtras.labs.dialogs.MonologFX;
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.samcrow.frameviewer.io3.DatabaseTrajectoryDataStore;
-import org.samcrow.frameviewer.io3.Marker;
-import org.samcrow.frameviewer.io3.PersistentFrameDataStore;
 
 /**
  * Hello world!
  *
  */
 public class App extends Application {
-
-    /**
-     * The data model
-     */
-    private PersistentFrameDataStore<Marker> dataStore;
     
     private DatabaseTrajectoryDataStore trajectoryDataStore;
-
-    private SaveStatusController saveController;
-
-    /**
-     * The file that was last opened
-     */
-    private File lastOpenedFile;
-
-    private Stage stage;
 
     private DataStoringPlaybackControlModel model;
 
     @Override
     public void start(final Stage stage) {
-        this.stage = stage;
 
         try {
 
@@ -83,9 +63,7 @@ public class App extends Application {
             bar.setUseSystemMenuBar(true);
             box.getChildren().add(bar);
 
-            dataStore = new PersistentFrameDataStore<>();
             trajectoryDataStore = DatabaseTrajectoryDataStore.readFrom("127.0.0.1", "FrameViewer", "FrameViewer", "FrameViewer");
-            saveController = new SaveStatusController(dataStore);
             FrameFinder finder = new FrameFinder(frameDir);
             model = new DataStoringPlaybackControlModel(finder, trajectoryDataStore);
 
@@ -96,14 +74,14 @@ public class App extends Application {
 
             box.getChildren().add(new CanvasPane<>(canvas));
 
-            PlaybackControlPane controls = new PlaybackControlPane(model);
+            final PlaybackControlPane controls = new PlaybackControlPane(model);
             box.getChildren().add(controls);
             
-            // Hook up the trajectory display toggle
-            controls.setTrajectoriesDisplayed(true);
-            canvas.showingTrajectoriesProperty().bind(controls.trajectoriesDisplayedProperty());
+            // Hook up the trajectory display options
+            canvas.displayModeProperty().bindBidirectional(controls.trajectoryDisplayModeProperty());
+            canvas.trajectoryAlphaProperty().bindBidirectional(controls.trajectoryAlphaProperty());
             // Hook up trajectory tool select
-            canvas.trajectoryToolProperty().bind(controls.trajectoryToolProperty());
+            canvas.trajectoryToolProperty().bindBidirectional(controls.trajectoryToolProperty());
 
             //Assemble the root StackPane
             StackPane root = new StackPane();
@@ -134,14 +112,6 @@ public class App extends Application {
 
         final Menu fileMenu = new Menu("File");
 
-        final MenuItem saveItem = new MenuItem("Save as...");
-        saveItem.setAccelerator(KeyCombination.keyCombination("Shortcut+S"));
-        saveItem.setOnAction(new EventHandler<ActionEvent>() {
-            @Override
-            public void handle(ActionEvent t) {
-                saveFile();
-            }
-        });
 
         final MenuItem openItem = new MenuItem("Open...");
         openItem.setAccelerator(KeyCombination.keyCombination("Shortcut+O"));
@@ -152,7 +122,7 @@ public class App extends Application {
             }
         });
 
-        fileMenu.getItems().addAll(openItem, saveItem);
+        fileMenu.getItems().add(openItem);
 
         bar.getMenus().add(fileMenu);
 
@@ -172,57 +142,14 @@ public class App extends Application {
         return bar;
     }
 
-    private void saveFile() {
-        model.syncCurrentFrameData();
-
-        FileChooser chooser = new FileChooser();
-        chooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("CSV files", "*.csv"));
-        if (lastOpenedFile != null) {
-            chooser.setInitialDirectory(lastOpenedFile.getParentFile());
-        }
-        File saveFile = chooser.showSaveDialog(stage);
-        try {
-            dataStore.writeTo(saveFile);
-            saveController.markSaved();
-        }
-        catch (IOException ex) {
-            showExceptionDialog(ex, "Could not save file");
-        }
-    }
-
-    private void showExceptionDialog(Exception ex) {
-        Logger.getLogger(App.class.getName()).log(Level.SEVERE, null, ex);
-        MonologFX errDialog = new MonologFX(MonologFX.Type.ERROR);
-        errDialog.setModal(true);
-        errDialog.initOwner(stage);
-        errDialog.setTitleText("Error");
-        errDialog.setMessage(ex.getLocalizedMessage() + '\n' + getStackTrace(ex));
-
-        errDialog.showDialog();
-    }
-
-    private void showExceptionDialog(Exception ex, String title) {
-        Logger.getLogger(App.class.getName()).log(Level.SEVERE, null, ex);
-        MonologFX errDialog = new MonologFX(MonologFX.Type.ERROR);
-        errDialog.setModal(true);
-        errDialog.initOwner(stage);
-        errDialog.setTitleText(title);
-        errDialog.setMessage(ex.getLocalizedMessage() + '\n' + getStackTrace(ex));
-
-        errDialog.showDialog();
-    }
-
-    private static String getStackTrace(Exception ex) {
-        ByteArrayOutputStream stream = new ByteArrayOutputStream();
-        ex.printStackTrace(new PrintStream(stream));
-        return stream.toString();
-    }
 
     @Override
     public void stop() {
         try {
             // Close the database connection
-            trajectoryDataStore.close();
+            if(trajectoryDataStore != null) {
+                trajectoryDataStore.close();
+            }
         }
         catch (IOException ex) {
             Logger.getLogger(App.class.getName()).log(Level.SEVERE, null, ex);

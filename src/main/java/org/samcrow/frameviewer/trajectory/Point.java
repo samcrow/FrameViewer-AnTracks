@@ -1,5 +1,6 @@
 package org.samcrow.frameviewer.trajectory;
 
+import java.util.Objects;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.paint.Color;
 import org.samcrow.frameviewer.FrameObject;
@@ -91,29 +92,7 @@ public class Point extends FrameObject {
         this.x = other.x;
         this.y = other.y;
         this.activity = other.activity;
-    }
-
-    @Override
-    public int hashCode() {
-        int hash = 3;
-        hash = 31 * hash + this.x;
-        hash = 31 * hash + this.y;
-        return hash;
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-        if (obj == null) {
-            return false;
-        }
-        if (getClass() != obj.getClass()) {
-            return false;
-        }
-        final Point other = (Point) obj;
-        if (this.x != other.x) {
-            return false;
-        }
-        return this.y == other.y;
+        this.frame = other.frame;
     }
 
     public int getX() {
@@ -135,5 +114,35 @@ public class Point extends FrameObject {
         gc.setLineWidth(2);
         gc.strokeOval(canvasX - RADIUS, canvasY - RADIUS, 2 * RADIUS, 2 * RADIUS);
     }
+
+    @Override
+    public int hashCode() {
+        int hash = 7;
+        hash = 13 * hash + this.x;
+        hash = 13 * hash + this.y;
+        hash = 13 * hash + Objects.hashCode(this.activity);
+        return hash;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == null) {
+            return false;
+        }
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+        final Point other = (Point) obj;
+        if (this.x != other.x) {
+            return false;
+        }
+        if (this.y != other.y) {
+            return false;
+        }
+        return this.activity == other.activity;
+    }
+    
+    
+    
 
 }

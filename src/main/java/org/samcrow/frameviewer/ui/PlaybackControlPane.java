@@ -1,24 +1,24 @@
 package org.samcrow.frameviewer.ui;
 
 import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleObjectProperty;
-import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.Label;
-import javafx.scene.control.Toggle;
-import javafx.scene.control.ToggleButton;
+import javafx.scene.control.Slider;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyCodeCombination;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
 import org.samcrow.frameviewer.PlaybackControlModel;
+import org.samcrow.frameviewer.trajectory.TrajectoryDisplayMode;
 import org.samcrow.frameviewer.trajectory.TrajectoryTool;
 
 import static javafx.scene.layout.HBox.setMargin;
@@ -42,10 +42,12 @@ public class PlaybackControlPane extends HBox {
 
     private final PlaybackControlModel model;
 
-    // Trajectory display box
-    private final CheckBox trajectoryDisplayBox;
     
-    final ObjectProperty<TrajectoryTool> trajectoryTool = new SimpleObjectProperty<>();
+    private final ObjectProperty<TrajectoryTool> trajectoryTool = new SimpleObjectProperty<>();
+    
+    private final ObjectProperty<TrajectoryDisplayMode> trajectoryDisplayMode = new SimpleObjectProperty<>();
+    
+    private final DoubleProperty trajectoryAlpha = new SimpleDoubleProperty(1);
 
     public PlaybackControlPane(PlaybackControlModel model) {
         this.model = model;
@@ -151,61 +153,34 @@ public class PlaybackControlPane extends HBox {
 
         // Mode select
         {
-            final ToggleButton createButton = new ToggleButton("Create");
-            final ToggleButton editButton = new ToggleButton("Edit");
             
-            final SplitButtonBar toolBar = new SplitButtonBar();
-            toolBar.getChildren().addAll(createButton, editButton);
-            toolBar.setSelectedToggle(createButton);
-            
-            toolBar.selectedToggleProperty().addListener(new ChangeListener<Toggle>() {
-                @Override
-                public void changed(ObservableValue<? extends Toggle> ov, Toggle t, Toggle newValue) {
-                    if(newValue == createButton) {
-                        trajectoryTool.set(TrajectoryTool.Create);
-                    }
-                    else if(newValue == editButton) {
-                        trajectoryTool.set(TrajectoryTool.Edit);
-                    }
-                }
-            });
-            trajectoryTool.addListener(new ChangeListener<TrajectoryTool>() {
-                @Override
-                public void changed(ObservableValue<? extends TrajectoryTool> ov, TrajectoryTool t, TrajectoryTool newValue) {
-                    switch(newValue) {
-                        case Create:
-                            toolBar.setSelectedToggle(createButton);
-                            break;
-                        case Edit:
-                            toolBar.setSelectedToggle(editButton);
-                            break;
-                    }
-                }
-            });
+            final SplitButtonBar<TrajectoryTool> toolChoice = new SplitButtonBar<>(TrajectoryTool.values(), TrajectoryTool.Create);
+            trajectoryTool.bindBidirectional(toolChoice.selectedItemProperty());
 
-            getChildren().add(toolBar);
-            setMargin(toolBar, PADDING);
+            getChildren().add(toolChoice);
+            setMargin(toolChoice, PADDING);
         }
-
+        
+        // Display mode select
         {
-            trajectoryDisplayBox = new CheckBox("Show trajectories");
-            getChildren().add(trajectoryDisplayBox);
-            setMargin(trajectoryDisplayBox, PADDING);
+            final SplitButtonBar<TrajectoryDisplayMode> displayChoice = new SplitButtonBar<>(TrajectoryDisplayMode.values(), TrajectoryDisplayMode.Full);
+            trajectoryDisplayMode.bindBidirectional(displayChoice.selectedItemProperty());
+            
+            getChildren().add(displayChoice);
+            setMargin(displayChoice, PADDING);
+        }
+
+        // Trajectory opacity
+        {
+            final Slider slider = new Slider(0, 1, 1);
+            trajectoryAlpha.bindBidirectional(slider.valueProperty());
+            
+            getChildren().add(slider);
+            setMargin(slider, PADDING);
         }
 
     }
 
-    public final void setTrajectoriesDisplayed(boolean displayed) {
-        trajectoryDisplayBox.setSelected(displayed);
-    }
-
-    public final boolean isTrajectoriesDisplayed() {
-        return trajectoryDisplayBox.isSelected();
-    }
-
-    public final BooleanProperty trajectoriesDisplayedProperty() {
-        return trajectoryDisplayBox.selectedProperty();
-    }
 
     public final TrajectoryTool getTrajectoryTool() {
         return trajectoryTool.get();
@@ -217,6 +192,22 @@ public class PlaybackControlPane extends HBox {
     
     public final ObjectProperty<TrajectoryTool> trajectoryToolProperty() {
         return trajectoryTool;
+    }
+    
+    public final TrajectoryDisplayMode getTrajectoryDisplayMode() {
+        return trajectoryDisplayMode.get();
+    }
+    
+    public final void setTrajectoryDisplayMode(TrajectoryDisplayMode mode) {
+        trajectoryDisplayMode.set(mode);
+    }
+    
+    public final ObjectProperty<TrajectoryDisplayMode> trajectoryDisplayModeProperty() {
+        return trajectoryDisplayMode;
+    }
+    
+    public final DoubleProperty trajectoryAlphaProperty() {
+        return trajectoryAlpha;
     }
     
     /**
