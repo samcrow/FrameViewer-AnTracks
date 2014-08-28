@@ -38,37 +38,10 @@ public class DatabaseTrajectoryDataStore extends MultiFrameDataStore<Trajectory>
             try (ResultSet trajectories = instance.selectTrajectories()) {
                 while (trajectories.next()) {
 
-                    final int trajectoryId = trajectories.getInt("trajectory_id");
-                    final Trajectory.MoveType moveType = Trajectory.MoveType.safeValueOf(trajectories.getString("move_type"));
-
-                    try (ResultSet points = instance.selectPointsInTrajectory(trajectoryId)) {
-
-                        Trajectory trajectory;
-                        // Get the first point. Because the query involved an ORDER BY frame_number request,
-                        // this point must have the lowest frame number.
-                        if (points.next()) {
-                            final Point firstPoint = pointFromResultSet(points);
-                            trajectory = new Trajectory(firstPoint.getFrame(), firstPoint.getFrame() + 1, trajectoryId);
-                            trajectory.setMoveType(moveType);
-                            trajectory.setDataStore(instance);
-
-                            trajectory.set(firstPoint.getFrame(), firstPoint);
-                        }
-                        else {
-                            System.err.println("Got a trajectory with ID " + trajectoryId + " that does not have any points. This trajectory will be deleted.");
-                            instance.deleteTrajectoryFromDatabaseOnly(trajectoryId);
-                            // Proceed to the next trajectory
-                            continue;
-                        }
-
-                        while (points.next()) {
-                            final Point point = pointFromResultSet(points);
-                            trajectory.set(point.getFrame(), point);
-                        }
-
+                    final Trajectory trajectory = instance.createTrajectoryAndPoints(trajectories);
+                    if(trajectory != null) {
                         // Add this trajectory to the instance's list
                         instance.data.add(trajectory);
-
                     }
                 }
             }
@@ -94,31 +67,31 @@ public class DatabaseTrajectoryDataStore extends MultiFrameDataStore<Trajectory>
         try (ResultSet trajectories = selectTrajectories()) {
 
             final List<Trajectory> updated = new ArrayList<>();
-            
+
             while (trajectories.next()) {
                 final Trajectory existingTrajectory = findTrajectoryById(trajectories.getInt("trajectory_id"));
-                
-                if(existingTrajectory != null) {
+
+                if (existingTrajectory != null) {
                     // Propagate properties from the database trajectory to the existing one
-                
+
                     existingTrajectory.setMoveType(Trajectory.MoveType.valueOf(trajectories.getString("move_type")));
-                    
+
                     // Points
                     try (ResultSet points = selectPointsInTrajectory(existingTrajectory.getId())) {
-                        while(points.next()) {
+                        while (points.next()) {
                             final int frame = points.getInt("frame_number");
                             final Point existingPoint = existingTrajectory.get(frame);
-                            if(existingPoint != null) {
+                            if (existingPoint != null) {
                                 // Update this point
                                 existingPoint.setActivity(Point.Activity.valueOf(points.getString("activity")));
                                 existingPoint.setX(points.getInt("frame_x"));
                                 existingPoint.setY(points.getInt("frame_y"));
-                                
-                                if(existingPoint instanceof InteractionPoint) {
+
+                                if (existingPoint instanceof InteractionPoint) {
                                     final InteractionPoint iPoint = (InteractionPoint) existingPoint;
-                                    
+
                                     // Check if the point should be preserved as an interaction point
-                                    if(points.getBoolean("is_interaction")) {
+                                    if (points.getBoolean("is_interaction")) {
 
                                         iPoint.setType(InteractionType.valueOf(points.getString("interaction_type")));
                                         iPoint.setMetAntActivity(Point.Activity.valueOf(points.getString("interaction_met_ant_activity")));
@@ -131,7 +104,7 @@ public class DatabaseTrajectoryDataStore extends MultiFrameDataStore<Trajectory>
                                 else {
                                     // Not an interaction point
                                     // Check if it should be promoted
-                                    if(points.getBoolean("is_interaction")) {
+                                    if (points.getBoolean("is_interaction")) {
                                         // Promote
                                         final InteractionPoint iPoint = new InteractionPoint(existingPoint);
                                         iPoint.setType(InteractionType.valueOf(points.getString("interaction_type")));
@@ -141,7 +114,7 @@ public class DatabaseTrajectoryDataStore extends MultiFrameDataStore<Trajectory>
                                         existingTrajectory.set(frame, iPoint);
                                     }
                                 }
-                                
+
                             }
                             else {
                                 // Add a point
@@ -149,9 +122,25 @@ public class DatabaseTrajectoryDataStore extends MultiFrameDataStore<Trajectory>
                             }
                         }
                     }
+                    
+                    // Mark the trajectory updated
+                    updated.add(existingTrajectory);
+                }
+                else {
+                    // Create a new trajectory
+                    final Trajectory trajectory = createTrajectoryAndPoints(trajectories);
+                    if(trajectory != null) {
+                        updated.add(trajectory);
+                    }
                 }
             }
+            
+            // Clear the existing data and put the updated trajectories in
+            data.clear();
+            data.addAll(updated);
 
+            // Indicate that this object has changed
+            fireValueChangedEvent();
         }
         catch (SQLException ex) {
             throw new IOException(ex);
@@ -179,9 +168,40 @@ public class DatabaseTrajectoryDataStore extends MultiFrameDataStore<Trajectory>
             }
         }
 
-        if (!hasPoints || !hasTrajectories) {
+        if (!hasPoints && !hasTrajectories) {
             setUpSchema();
         }
+    }
+
+    private Trajectory createTrajectoryAndPoints(ResultSet trajectories) throws SQLException {
+        final int trajectoryId = trajectories.getInt("trajectory_id");
+        final Trajectory.MoveType moveType = Trajectory.MoveType.safeValueOf(trajectories.getString("move_type"));
+
+        try (ResultSet points = selectPointsInTrajectory(trajectoryId)) {
+
+            Trajectory trajectory;
+                        // Get the first point. Because the query involved an ORDER BY frame_number request,
+            // this point must have the lowest frame number.
+            if (points.next()) {
+                final Point firstPoint = pointFromResultSet(points);
+                trajectory = new Trajectory(firstPoint.getFrame(), firstPoint.getFrame() + 1, trajectoryId);
+                trajectory.setMoveType(moveType);
+                trajectory.setDataStore(this);
+
+                trajectory.set(firstPoint.getFrame(), firstPoint);
+            }
+            else {
+                System.err.println("Got a trajectory with ID " + trajectoryId + " that does not have any points. This trajectory will be deleted.");
+                deleteTrajectoryFromDatabaseOnly(trajectoryId);
+                return null;
+            }
+
+            while (points.next()) {
+                final Point point = pointFromResultSet(points);
+                trajectory.set(point.getFrame(), point);
+            }
+        }
+        return null;
     }
 
     private ResultSet selectTrajectories() throws SQLException {
@@ -257,7 +277,7 @@ public class DatabaseTrajectoryDataStore extends MultiFrameDataStore<Trajectory>
         // Remove the trajectory from the local data
         data.remove(trajectory);
     }
-    
+
     private void deleteTrajectoryFromDatabaseOnly(int trajectoryId) throws SQLException {
         try (Statement statement = connection.createStatement()) {
             statement.executeUpdate("DELETE FROM `points` WHERE `trajectory_id`=" + trajectoryId);
@@ -449,23 +469,23 @@ public class DatabaseTrajectoryDataStore extends MultiFrameDataStore<Trajectory>
         // Because the results are ordered by trajectory ID,
         // binary search can be used
         final int foundIndex = Collections.binarySearch(data,
-                        new Trajectory(1, 2, trajectoryId),
-                        new Comparator<Trajectory>() {
+                new Trajectory(1, 2, trajectoryId),
+                new Comparator<Trajectory>() {
 
-                            @Override
-                            public int compare(Trajectory o1, Trajectory o2) {
-                                if (o1.getId() < o2.getId()) {
-                                    return -1;
-                                }
-                                else if (o1.getId() > o2.getId()) {
-                                    return 1;
-                                }
-                                else {
-                                    return 0;
-                                }
-                            }
+                    @Override
+                    public int compare(Trajectory o1, Trajectory o2) {
+                        if (o1.getId() < o2.getId()) {
+                            return -1;
+                        }
+                        else if (o1.getId() > o2.getId()) {
+                            return 1;
+                        }
+                        else {
+                            return 0;
+                        }
+                    }
 
-                        });
+                });
 
         if (foundIndex <= 0) {
             return data.get(foundIndex);
@@ -487,7 +507,7 @@ public class DatabaseTrajectoryDataStore extends MultiFrameDataStore<Trajectory>
                         final int targetFrame = iPoint.getFrame();
 
                         final Trajectory foundTrajectory = findTrajectoryById(targetTrajectoryId);
-                        
+
                         if (foundTrajectory != null) {
                             // Found trajectory
                             // Look for the frame
