@@ -256,7 +256,7 @@ public class Trajectory implements MultiFrameObject, Iterable<Point> {
                 paintInterpolated(gc, nativeImageWidth, nativeImageHeight, actualImageWidth, actualImageHeight, imageTopLeftX, imageTopLeftY, currentFrame);
                 break;
             case NearbyPoints:
-                // TODO
+                paintNearby(gc, nativeImageWidth, nativeImageHeight, actualImageWidth, actualImageHeight, imageTopLeftX, imageTopLeftY, currentFrame);
                 break;
         }
     }
@@ -264,22 +264,19 @@ public class Trajectory implements MultiFrameObject, Iterable<Point> {
     private void paintFull(GraphicsContext gc, double nativeImageWidth, double nativeImageHeight, double actualImageWidth, double actualImageHeight, double imageTopLeftX, double imageTopLeftY, int currentFrame) {
         Point2D lastLocation = null;
         for (Point point : this) {
-            final double xRatio = point.getX() / nativeImageWidth;
-            final double yRatio = point.getY() / nativeImageHeight;
-            final double canvasX = imageTopLeftX + xRatio * actualImageWidth;
-            final double canvasY = imageTopLeftY + yRatio * actualImageHeight;
+            final Point2D canvasPos = imageToCanvasPosition(new Point2D(point.getX(), point.getY()), nativeImageWidth, nativeImageHeight, actualImageWidth, actualImageHeight, imageTopLeftX, imageTopLeftY);
 
             // Draw a line from the last point to this one
             if (lastLocation != null) {
                 gc.setStroke(Color.LIGHTGREEN);
-                gc.strokeLine(lastLocation.getX(), lastLocation.getY(), canvasX, canvasY);
+                gc.strokeLine(lastLocation.getX(), lastLocation.getY(), canvasPos.getX(), canvasPos.getY());
             }
 
             final boolean hilighted = currentFrame == point.getFrame();
             // Draw the marker
-            point.paint(gc, canvasX, canvasY, hilighted);
+            point.paint(gc, canvasPos.getX(), canvasPos.getY(), hilighted);
 
-            lastLocation = new Point2D(canvasX, canvasY);
+            lastLocation = canvasPos;
         }
 
     }
@@ -300,24 +297,9 @@ public class Trajectory implements MultiFrameObject, Iterable<Point> {
         }
         else {
             // Draw a non-hilighted point linearly interpolated between the before and after frames
-            Point previousPoint = null;
-            Point nextPoint = null;
-            // Find the previous non-null point
-            for (int pf = currentFrame - 1; pf >= firstFrame; pf--) {
-                final Point attempt = get(pf);
-                if (attempt != null) {
-                    previousPoint = attempt;
-                    break;
-                }
-            }
-            // Find the next non-null point
-            for (int nf = currentFrame + 1; nf <= lastFrame; nf++) {
-                final Point attempt = get(nf);
-                if (attempt != null) {
-                    nextPoint = attempt;
-                    break;
-                }
-            }
+            Point previousPoint = findPointBefore(currentFrame);
+            Point nextPoint = findPointAfter(currentFrame);
+
             assert previousPoint != null;
             assert nextPoint != null;
 
@@ -332,6 +314,47 @@ public class Trajectory implements MultiFrameObject, Iterable<Point> {
         }
     }
 
+    private void paintNearby(GraphicsContext gc, double nativeImageWidth, double nativeImageHeight, double actualImageWidth, double actualImageHeight, double imageTopLeftX, double imageTopLeftY, int currentFrame) {
+        final Point previous = findPointBefore(currentFrame);
+        final Point current = get(currentFrame);
+        final Point next = findPointAfter(currentFrame);
+        
+        if(current != null) {
+            final Point2D currentPos = imageToCanvasPosition(new Point2D(current.getX(), current.getY()), nativeImageWidth, nativeImageHeight, actualImageWidth, actualImageHeight, imageTopLeftX, imageTopLeftY);
+            
+            if(previous != null) {
+                final Point2D previousPos = imageToCanvasPosition(new Point2D(previous.getX(), previous.getY()), nativeImageWidth, nativeImageHeight, actualImageWidth, actualImageHeight, imageTopLeftX, imageTopLeftY);
+                // Draw a line from previous to current, and draw previous
+                gc.setStroke(Color.LIGHTGREEN);
+                gc.strokeLine(previousPos.getX(), previousPos.getY(), currentPos.getX(), currentPos.getY());
+                previous.paint(gc, previousPos.getX(), previousPos.getY(), false);
+            }
+            if(next != null) {
+                final Point2D nextPos = imageToCanvasPosition(new Point2D(next.getX(), next.getY()), nativeImageWidth, nativeImageHeight, actualImageWidth, actualImageHeight, imageTopLeftX, imageTopLeftY);
+                // Draw a line from next to current, and draw previous
+                gc.setStroke(Color.LIGHTGREEN);
+                gc.strokeLine(nextPos.getX(), nextPos.getY(), currentPos.getX(), currentPos.getY());
+                next.paint(gc, nextPos.getX(), nextPos.getY(), false);
+            }
+            // Draw current
+            current.paint(gc, currentPos.getX(), currentPos.getY(), true);
+        }
+        else {
+            if(previous != null && next != null) {
+                final Point2D previousPos = imageToCanvasPosition(new Point2D(previous.getX(), previous.getY()), nativeImageWidth, nativeImageHeight, actualImageWidth, actualImageHeight, imageTopLeftX, imageTopLeftY);
+                final Point2D nextPos = imageToCanvasPosition(new Point2D(next.getX(), next.getY()), nativeImageWidth, nativeImageHeight, actualImageWidth, actualImageHeight, imageTopLeftX, imageTopLeftY);
+                
+                gc.setStroke(Color.LIGHTGREEN);
+                // Draw a line between previous and next
+                gc.strokeLine(previousPos.getX(), previousPos.getY(), nextPos.getX(), nextPos.getY());
+                
+                // Draw previous and next
+                previous.paint(gc, previousPos.getX(), previousPos.getY(), false);
+                next.paint(gc, nextPos.getX(), nextPos.getY(), false);
+            }
+        }
+    }
+
     private Point2D imageToCanvasPosition(Point2D imagePosition, double nativeImageWidth, double nativeImageHeight, double actualImageWidth, double actualImageHeight, double imageTopLeftX, double imageTopLeftY) {
         final double xRatio = imagePosition.getX() / nativeImageWidth;
         final double yRatio = imagePosition.getY() / nativeImageHeight;
@@ -339,6 +362,39 @@ public class Trajectory implements MultiFrameObject, Iterable<Point> {
         final double canvasY = imageTopLeftY + yRatio * actualImageHeight;
 
         return new Point2D(canvasX, canvasY);
+    }
+
+    /**
+     * Returns the nearest point before the provided frame number, or null
+     * if none exists
+     * <p>
+     * @param currentFrame
+     * @return
+     */
+    private Point findPointBefore(int currentFrame) {
+        for (int pf = currentFrame - 1; pf >= firstFrame; pf--) {
+            final Point attempt = get(pf);
+            if (attempt != null) {
+                return attempt;
+            }
+        }
+        return null;
+    }
+    /**
+     * Returns the nearest point after the provided frame number, or null
+     * if none exists
+     * <p>
+     * @param currentFrame
+     * @return
+     */
+    private Point findPointAfter(int currentFrame) {
+        for (int nf = currentFrame + 1; nf <= lastFrame; nf++) {
+            final Point attempt = get(nf);
+            if (attempt != null) {
+                return attempt;
+            }
+        }
+        return null;
     }
 
     // Persistence section
