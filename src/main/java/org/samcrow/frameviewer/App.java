@@ -23,6 +23,7 @@ import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import jfxtras.labs.dialogs.MonologFX;
+import org.apache.commons.lang.exception.ExceptionUtils;
 import org.samcrow.frameviewer.io3.DatabaseTrajectoryDataStore;
 import org.samcrow.frameviewer.io3.Marker;
 import org.samcrow.frameviewer.io3.PersistentFrameDataStore;
@@ -83,7 +84,7 @@ public class App extends Application {
             box.getChildren().add(bar);
 
             dataStore = new PersistentFrameDataStore<>();
-            trajectoryDataStore = DatabaseTrajectoryDataStore.readFrom("127.0.0.1", "FrameViewer", "FrameViewer", "FrameViewer");
+            trajectoryDataStore = DatabaseTrajectoryDataStore.readFrom("192.168.3.100", "FrameViewer", "FrameViewer", "FrameViewer");
             saveController = new SaveStatusController(dataStore);
             FrameFinder finder = new FrameFinder(frameDir);
             model = new DataStoringPlaybackControlModel(finder, trajectoryDataStore);
@@ -118,8 +119,8 @@ public class App extends Application {
         }
         catch (Exception ex) {
             MonologFX dialog = new MonologFX(MonologFX.Type.ERROR);
-            dialog.setTitle("Error");
-            dialog.setMessage(ex.toString());
+            dialog.setTitle(ex.toString());
+            dialog.setMessage(ExceptionUtils.getFullStackTrace(ex));
             dialog.showDialog();
             ex.printStackTrace();
             stop();

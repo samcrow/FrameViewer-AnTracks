@@ -39,7 +39,7 @@ public class DatabaseTrajectoryDataStore extends MultiFrameDataStore<Trajectory>
                 while (trajectories.next()) {
 
                     final int trajectoryId = trajectories.getInt("trajectory_id");
-                    final Trajectory.MoveType moveType = Trajectory.MoveType.valueOf(trajectories.getString("move_type"));
+                    final Trajectory.MoveType moveType = Trajectory.MoveType.safeValueOf(trajectories.getString("move_type"));
 
                     try (ResultSet points = instance.selectPointsInTrajectory(trajectoryId)) {
 
@@ -399,9 +399,9 @@ public class DatabaseTrajectoryDataStore extends MultiFrameDataStore<Trajectory>
         if (result.getBoolean("is_interaction")) {
             point = new InteractionPoint(result.getInt("frame_x"), result.getInt("frame_y"));
             // Set interaction-specific properties
-            ((InteractionPoint) point).setType(InteractionType.valueOf(result.getString("interaction_type")));
+            ((InteractionPoint) point).setType(InteractionType.safeValueOf(result.getString("interaction_type")));
             ((InteractionPoint) point).setMetAntId(result.getInt("interaction_met_trajectory_id"));
-            ((InteractionPoint) point).setMetAntActivity(Point.Activity.valueOf(result.getString("interaction_met_ant_activity")));
+            ((InteractionPoint) point).setMetAntActivity(Point.Activity.safeValueOf(result.getString("interaction_met_ant_activity")));
         }
         else {
             point = new Point(result.getInt("frame_x"), result.getInt("frame_y"));
@@ -409,7 +409,7 @@ public class DatabaseTrajectoryDataStore extends MultiFrameDataStore<Trajectory>
 
         // Set common attributes
         point.setFrame(result.getInt("frame_number"));
-        point.setActivity(Point.Activity.valueOf(result.getString("activity")));
+        point.setActivity(Point.Activity.safeValueOf(result.getString("activity")));
 
         return point;
     }

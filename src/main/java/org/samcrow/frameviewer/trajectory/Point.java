@@ -6,6 +6,7 @@ import org.samcrow.frameviewer.FrameObject;
 
 /**
  * A point in a trajectory
+ * <p>
  * @author Sam Crow
  */
 public class Point extends FrameObject {
@@ -35,29 +36,55 @@ public class Point extends FrameObject {
      * @param activity the activity to set
      */
     public void setActivity(Activity activity) {
-        this.activity = activity;
+        if (activity != null) {
+            this.activity = activity;
+        }
+        else {
+            // Ensure not null
+            this.activity = Activity.NotCarrying;
+        }
     }
 
     public static enum Activity {
+
         NotCarrying,
         CarryingFood,
-        CarryingSomethingElse,
+        CarryingSomethingElse,;
+
+        /**
+         * Returns the type corresponding to a name, but never
+         * throws an exception. Returns NotCarrying if a valid value
+         * could not be found.
+         * <p>
+         * @param name
+         * @return
+         */
+        public static Activity safeValueOf(String name) {
+            try {
+                return valueOf(name);
+            }
+            catch (Exception ex) {
+                return NotCarrying;
+            }
+        }
+
     }
-    
+
     private int x;
 
     private int y;
-    
+
     protected Activity activity;
 
     public Point(int x, int y) {
         this.x = x;
         this.y = y;
     }
-    
+
     /**
      * Constructs a copy of another point
-     * @param other 
+     * <p>
+     * @param other
      */
     public Point(Point other) {
         super(other);
@@ -92,13 +119,14 @@ public class Point extends FrameObject {
     public int getX() {
         return x;
     }
+
     public int getY() {
         return y;
     }
-    
+
     public void paint(GraphicsContext gc, double canvasX, double canvasY, boolean hilighted) {
         final int RADIUS = 3;
-        if(hilighted) {
+        if (hilighted) {
             gc.setStroke(Color.RED);
         }
         else {
@@ -107,4 +135,5 @@ public class Point extends FrameObject {
         gc.setLineWidth(2);
         gc.strokeOval(canvasX - RADIUS, canvasY - RADIUS, 2 * RADIUS, 2 * RADIUS);
     }
+
 }

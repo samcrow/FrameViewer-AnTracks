@@ -59,4 +59,19 @@ public enum InteractionType {
         }
     }
 
+    /**
+     * Returns the type corresponding to a name, but never
+     * throws an exception. Returns Unknown if a valid value
+     * could not be found.
+     * @param name
+     * @return 
+     */
+    public static InteractionType safeValueOf(String name) {
+        try {
+            return valueOf(name);
+        }
+        catch(Exception ex) {
+            return Unknown;
+        }
+    }
 }
