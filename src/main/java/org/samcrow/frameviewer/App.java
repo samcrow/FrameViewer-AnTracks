@@ -1,17 +1,13 @@
 package org.samcrow.frameviewer;
 
-import java.io.ByteArrayOutputStream;
 import org.samcrow.frameviewer.ui.CanvasPane;
 import org.samcrow.frameviewer.ui.FrameCanvas;
 import org.samcrow.frameviewer.ui.PlaybackControlPane;
 import java.io.File;
 import java.io.IOException;
-import java.io.PrintStream;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javafx.application.Application;
-import javafx.beans.InvalidationListener;
-import javafx.beans.Observable;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.scene.Scene;
@@ -22,7 +18,6 @@ import javafx.scene.input.KeyCombination;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.DirectoryChooser;
-import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import jfxtras.labs.dialogs.MonologFX;
 import org.apache.commons.lang.exception.ExceptionUtils;
