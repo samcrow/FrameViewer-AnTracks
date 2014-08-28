@@ -25,23 +25,14 @@ import javafx.stage.Stage;
 import jfxtras.labs.dialogs.MonologFX;
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.samcrow.frameviewer.io3.DatabaseTrajectoryDataStore;
-import org.samcrow.frameviewer.io3.Marker;
-import org.samcrow.frameviewer.io3.PersistentFrameDataStore;
 
 /**
  * Hello world!
  *
  */
 public class App extends Application {
-
-    /**
-     * The data model
-     */
-    private PersistentFrameDataStore<Marker> dataStore;
     
     private DatabaseTrajectoryDataStore trajectoryDataStore;
-
-    private SaveStatusController saveController;
 
     /**
      * The file that was last opened
@@ -83,9 +74,7 @@ public class App extends Application {
             bar.setUseSystemMenuBar(true);
             box.getChildren().add(bar);
 
-            dataStore = new PersistentFrameDataStore<>();
             trajectoryDataStore = DatabaseTrajectoryDataStore.readFrom("192.168.3.100", "FrameViewer", "FrameViewer", "FrameViewer");
-            saveController = new SaveStatusController(dataStore);
             FrameFinder finder = new FrameFinder(frameDir);
             model = new DataStoringPlaybackControlModel(finder, trajectoryDataStore);
 
@@ -134,14 +123,6 @@ public class App extends Application {
 
         final Menu fileMenu = new Menu("File");
 
-        final MenuItem saveItem = new MenuItem("Save as...");
-        saveItem.setAccelerator(KeyCombination.keyCombination("Shortcut+S"));
-        saveItem.setOnAction(new EventHandler<ActionEvent>() {
-            @Override
-            public void handle(ActionEvent t) {
-                saveFile();
-            }
-        });
 
         final MenuItem openItem = new MenuItem("Open...");
         openItem.setAccelerator(KeyCombination.keyCombination("Shortcut+O"));
@@ -152,7 +133,7 @@ public class App extends Application {
             }
         });
 
-        fileMenu.getItems().addAll(openItem, saveItem);
+        fileMenu.getItems().add(openItem);
 
         bar.getMenus().add(fileMenu);
 
@@ -172,57 +153,14 @@ public class App extends Application {
         return bar;
     }
 
-    private void saveFile() {
-        model.syncCurrentFrameData();
-
-        FileChooser chooser = new FileChooser();
-        chooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("CSV files", "*.csv"));
-        if (lastOpenedFile != null) {
-            chooser.setInitialDirectory(lastOpenedFile.getParentFile());
-        }
-        File saveFile = chooser.showSaveDialog(stage);
-        try {
-            dataStore.writeTo(saveFile);
-            saveController.markSaved();
-        }
-        catch (IOException ex) {
-            showExceptionDialog(ex, "Could not save file");
-        }
-    }
-
-    private void showExceptionDialog(Exception ex) {
-        Logger.getLogger(App.class.getName()).log(Level.SEVERE, null, ex);
-        MonologFX errDialog = new MonologFX(MonologFX.Type.ERROR);
-        errDialog.setModal(true);
-        errDialog.initOwner(stage);
-        errDialog.setTitleText("Error");
-        errDialog.setMessage(ex.getLocalizedMessage() + '\n' + getStackTrace(ex));
-
-        errDialog.showDialog();
-    }
-
-    private void showExceptionDialog(Exception ex, String title) {
-        Logger.getLogger(App.class.getName()).log(Level.SEVERE, null, ex);
-        MonologFX errDialog = new MonologFX(MonologFX.Type.ERROR);
-        errDialog.setModal(true);
-        errDialog.initOwner(stage);
-        errDialog.setTitleText(title);
-        errDialog.setMessage(ex.getLocalizedMessage() + '\n' + getStackTrace(ex));
-
-        errDialog.showDialog();
-    }
-
-    private static String getStackTrace(Exception ex) {
-        ByteArrayOutputStream stream = new ByteArrayOutputStream();
-        ex.printStackTrace(new PrintStream(stream));
-        return stream.toString();
-    }
 
     @Override
     public void stop() {
         try {
             // Close the database connection
-            trajectoryDataStore.close();
+            if(trajectoryDataStore != null) {
+                trajectoryDataStore.close();
+            }
         }
         catch (IOException ex) {
             Logger.getLogger(App.class.getName()).log(Level.SEVERE, null, ex);
