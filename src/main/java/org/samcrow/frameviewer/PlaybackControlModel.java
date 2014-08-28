@@ -104,7 +104,7 @@ public class PlaybackControlModel implements CurrentFrameProvider {
                 if(frame >= getMaximumFrame()) {
                     playForwardEnabled.set(false);
                     jumpForwardEnabled.set(false);
-                    if(player == null) {
+                    if(player != null) {
                         player.cancel();
                     }
                 }

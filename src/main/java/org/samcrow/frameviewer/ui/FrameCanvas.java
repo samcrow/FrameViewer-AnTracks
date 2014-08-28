@@ -194,7 +194,7 @@ public class FrameCanvas extends PaintableCanvas {
 
                 // Draw trajectories
                 for (Trajectory trajectory : trajectories.get()) {
-                    trajectory.paint(gc, image.get().getWidth(), image.get().getHeight(), imageWidth, imageHeight, imageTopLeftX, imageTopLeftY, getCurrentFrame());
+                    trajectory.paint(gc, image.get().getWidth(), image.get().getHeight(), imageWidth, imageHeight, imageTopLeftX, imageTopLeftY, getCurrentFrame(), getDisplayMode());
                 }
 
                 gc.restore();
