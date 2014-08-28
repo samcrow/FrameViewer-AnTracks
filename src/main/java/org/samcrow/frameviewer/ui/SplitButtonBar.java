@@ -1,96 +1,99 @@
 package org.samcrow.frameviewer.ui;
 
+import com.google.common.collect.BiMap;
+import com.google.common.collect.HashBiMap;
 import java.util.List;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
-import javafx.collections.ListChangeListener;
 import javafx.scene.Node;
 import javafx.scene.control.Toggle;
+import javafx.scene.control.ToggleButton;
 import javafx.scene.layout.HBox;
 
 /**
- * Displays a group of Toggles (and other nodes) and keeps track of one
- * active Toggle. Sets up nodes to look like split buttons.
+ * Displays a group of ToggleButtons that allow a value to be selected.
+ * 
+ * 
+ * 
  * <p>
+ * @param <T> The type of element to choose
  * @author samcrow
  */
-public class SplitButtonBar extends HBox {
+public class SplitButtonBar<T> extends HBox {
     
-    private ObjectProperty<Toggle> selectedToggle = new SimpleObjectProperty<>();
+    private final ObjectProperty<T> selection = new SimpleObjectProperty<>();
+    
+    private final BiMap < T, Toggle > valueToButton = HashBiMap.create();
+    private final BiMap < Toggle, T > buttonToValue = valueToButton.inverse();
 
-    public SplitButtonBar() {
+    public SplitButtonBar(T[] values, T initialSelection) {
 
-        // Deal with buttons when they are added
-        getChildren().addListener(new ListChangeListener<Node>() {
-            @Override
-            public void onChanged(ListChangeListener.Change<? extends Node> change) {
-                while (change.next()) {
-                    if (change.wasAdded()) {
-                        final List<? extends Node> addedNodes = change.getAddedSubList();
-                        for (final Node node : addedNodes) {
-                            node.setStyle("-fx-background-radius: 0;");
-
-                            // When a button, or other toggleable thing, is selected, make every other button deselected
-                            if (node instanceof Toggle) {
-                                ((Toggle) node).selectedProperty().addListener(new ChangeListener<Boolean>() {
-                                    @Override
-                                    public void changed(ObservableValue<? extends Boolean> ov, Boolean t, Boolean newValue) {
-                                        if(newValue) {
-                                            selectedToggle.set((Toggle) node);
-                                            // This is newly selected
-                                            deselectEachExcept((Toggle) node);
-                                        }
-                                    }
-                                });
-                            }
-
-                        }
+        for(T value : values) {
+            // Create a ToggleButton
+            final ToggleButton button = new ToggleButton(value.toString());
+            
+            button.selectedProperty().addListener(new ChangeListener<Boolean>() {
+                @Override
+                public void changed(ObservableValue<? extends Boolean> observable, Boolean oldValue, Boolean newValue) {
+                    if(newValue == true) {
+                        setSelectedItem(buttonToValue.get(button));
                     }
                 }
-                // Restore the ususal radius for the outside corners
-                // Not currently working
-                final List<? extends Node> list = getChildren();
-                if (!list.isEmpty()) {
-                    list.get(0).setStyle("-fx-background-radius: 3 0 0 3, 2 0 0 2, 2 0 0 2;");
-                    list.get(list.size() - 1).setStyle("-fx-background-radius: 0 3 3 0, 0 2 2 0, 0 2 2 0;");
-                }
+            });
+            
+            valueToButton.put(value, button);
+            getChildren().add(button);
+        }
+        
+        // Set up initial selection
+        setSelectedItem(initialSelection);
+        valueToButton.get(initialSelection).setSelected(true);
+        
+        selection.addListener(new ChangeListener<T>() {
+            @Override
+            public void changed(ObservableValue<? extends T> ov, T oldValue, T newValue) {
+                // Deselect the Toggle corresponding to the old value
+                valueToButton.get(oldValue).setSelected(false);
+                // Select the Toggle corresponding to the new value
+                valueToButton.get(newValue).setSelected(true);
             }
         });
         
-        selectedToggle.addListener(new ChangeListener<Toggle>() {
-            @Override
-            public void changed(ObservableValue<? extends Toggle> ov, Toggle t, Toggle newValue) {
-                newValue.setSelected(true);
-                deselectEachExcept(newValue);
-            }
-        });
+        setCorners();
     }
 
-    /**
-     * Deselects each Toggle in this group except the provided one
-     * <p>
-     * @param toggle
-     */
-    private void deselectEachExcept(Toggle toggle) {
-        for (Node node : getChildrenUnmodifiable()) {
-            if (node instanceof Toggle && node != toggle) {
-                ((Toggle) node).setSelected(false);
+    
+    public final T getSelectedItem() {
+        return selection.get();
+    }
+    public final void setSelectedItem(T item) {
+        selection.set(item);
+    }
+    public final ObjectProperty<T> selectedItemProperty() {
+        return selection;
+    }
+    
+    private void setCorners() {
+        final List<Node> children = getChildrenUnmodifiable();
+        if(children.size() <= 1) {
+            // Up to 1 buttons: Do nothing
+        }
+        else if(children.size() == 2) {
+            // Set corners for buttons 0 and 1
+            children.get(0).setStyle("-fx-background-radius: 3 0 0 3, 2 0 0 2, 2 0 0 2;");
+            children.get(1).setStyle("-fx-background-radius: 0 3 3 0, 0 2 2 0, 0 2 2 0;");
+        }
+        else {
+            // 3 or more. Set corners for first, middle, and last
+            children.get(0).setStyle("-fx-background-radius: 3 0 0 3, 2 0 0 2, 2 0 0 2;");
+            
+            for(int i = 1; i < children.size() - 1; i++) {
+                children.get(i).setStyle("-fx-background-radius: 0;");
             }
+            
+            children.get(children.size() - 1).setStyle("-fx-background-radius: 0 3 3 0, 0 2 2 0, 0 2 2 0;");
         }
     }
-
-    public final Toggle getSelectedToggle() {
-        return selectedToggle.get();
-    }
-    
-    public final void setSelectedToggle(Toggle toggle) {
-        selectedToggle.set(toggle);
-    }
-    
-    public final ObjectProperty<Toggle> selectedToggleProperty() {
-        return selectedToggle;
-    }
-    
 }

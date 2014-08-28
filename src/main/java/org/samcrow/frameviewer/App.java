@@ -10,6 +10,8 @@ import java.io.PrintStream;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javafx.application.Application;
+import javafx.beans.InvalidationListener;
+import javafx.beans.Observable;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.scene.Scene;
@@ -74,7 +76,7 @@ public class App extends Application {
             bar.setUseSystemMenuBar(true);
             box.getChildren().add(bar);
 
-            trajectoryDataStore = DatabaseTrajectoryDataStore.readFrom("192.168.3.100", "FrameViewer", "FrameViewer", "FrameViewer");
+            trajectoryDataStore = DatabaseTrajectoryDataStore.readFrom("127.0.0.1", "FrameViewer", "FrameViewer", "FrameViewer");
             FrameFinder finder = new FrameFinder(frameDir);
             model = new DataStoringPlaybackControlModel(finder, trajectoryDataStore);
 
@@ -85,14 +87,14 @@ public class App extends Application {
 
             box.getChildren().add(new CanvasPane<>(canvas));
 
-            PlaybackControlPane controls = new PlaybackControlPane(model);
+            final PlaybackControlPane controls = new PlaybackControlPane(model);
             box.getChildren().add(controls);
             
             // Hook up the trajectory display toggle
             controls.setTrajectoriesDisplayed(true);
             canvas.showingTrajectoriesProperty().bind(controls.trajectoriesDisplayedProperty());
             // Hook up trajectory tool select
-            canvas.trajectoryToolProperty().bind(controls.trajectoryToolProperty());
+            canvas.trajectoryToolProperty().bindBidirectional(controls.trajectoryToolProperty());
 
             //Assemble the root StackPane
             StackPane root = new StackPane();

@@ -19,6 +19,7 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
 import org.samcrow.frameviewer.PlaybackControlModel;
+import org.samcrow.frameviewer.trajectory.TrajectoryDisplayMode;
 import org.samcrow.frameviewer.trajectory.TrajectoryTool;
 
 import static javafx.scene.layout.HBox.setMargin;
@@ -151,40 +152,20 @@ public class PlaybackControlPane extends HBox {
 
         // Mode select
         {
-            final ToggleButton createButton = new ToggleButton("Create");
-            final ToggleButton editButton = new ToggleButton("Edit");
             
-            final SplitButtonBar toolBar = new SplitButtonBar();
-            toolBar.getChildren().addAll(createButton, editButton);
-            toolBar.setSelectedToggle(createButton);
-            
-            toolBar.selectedToggleProperty().addListener(new ChangeListener<Toggle>() {
-                @Override
-                public void changed(ObservableValue<? extends Toggle> ov, Toggle t, Toggle newValue) {
-                    if(newValue == createButton) {
-                        trajectoryTool.set(TrajectoryTool.Create);
-                    }
-                    else if(newValue == editButton) {
-                        trajectoryTool.set(TrajectoryTool.Edit);
-                    }
-                }
-            });
-            trajectoryTool.addListener(new ChangeListener<TrajectoryTool>() {
-                @Override
-                public void changed(ObservableValue<? extends TrajectoryTool> ov, TrajectoryTool t, TrajectoryTool newValue) {
-                    switch(newValue) {
-                        case Create:
-                            toolBar.setSelectedToggle(createButton);
-                            break;
-                        case Edit:
-                            toolBar.setSelectedToggle(editButton);
-                            break;
-                    }
-                }
-            });
+            final SplitButtonBar<TrajectoryTool> toolChoice = new SplitButtonBar<>(TrajectoryTool.values(), TrajectoryTool.Create);
+            trajectoryTool.bindBidirectional(toolChoice.selectedItemProperty());
 
-            getChildren().add(toolBar);
-            setMargin(toolBar, PADDING);
+            getChildren().add(toolChoice);
+            setMargin(toolChoice, PADDING);
+        }
+        
+        // Display mode select
+        {
+            final SplitButtonBar<TrajectoryDisplayMode> displayChoice = new SplitButtonBar<>(TrajectoryDisplayMode.values(), TrajectoryDisplayMode.Full);
+            
+            getChildren().add(displayChoice);
+            setMargin(displayChoice, PADDING);
         }
 
         {
