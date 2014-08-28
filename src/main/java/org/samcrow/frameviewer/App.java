@@ -28,7 +28,7 @@ import org.samcrow.frameviewer.io3.DatabaseTrajectoryDataStore;
  *
  */
 public class App extends Application {
-    
+
     private DatabaseTrajectoryDataStore trajectoryDataStore;
 
     private DataStoringPlaybackControlModel model;
@@ -38,12 +38,11 @@ public class App extends Application {
 
         try {
 
-            
             // Check for command-line frame directory
             File frameDir;
-            if(getParameters().getNamed().containsKey("frame-directory")) {
+            if (getParameters().getNamed().containsKey("frame-directory")) {
                 frameDir = new File(getParameters().getNamed().get("frame-directory"));
-                if(!frameDir.isDirectory()) {
+                if (!frameDir.isDirectory()) {
                     throw new IllegalArgumentException("The provided image directory path must be a folder");
                 }
             }
@@ -53,7 +52,7 @@ public class App extends Application {
                 frameDir = chooser.showDialog(stage);
             }
             // Exit if no directory selected
-            if(frameDir == null) {
+            if (frameDir == null) {
                 stop();
             }
 
@@ -76,12 +75,24 @@ public class App extends Application {
 
             final PlaybackControlPane controls = new PlaybackControlPane(model);
             box.getChildren().add(controls);
-            
+
             // Hook up the trajectory display options
             canvas.displayModeProperty().bindBidirectional(controls.trajectoryDisplayModeProperty());
             canvas.trajectoryAlphaProperty().bindBidirectional(controls.trajectoryAlphaProperty());
             // Hook up trajectory tool select
             canvas.trajectoryToolProperty().bindBidirectional(controls.trajectoryToolProperty());
+            // Hook up refresh action
+            controls.setOnRefreshRequested(new EventHandler<ActionEvent>() {
+                @Override
+                public void handle(ActionEvent t) {
+                    try {
+                        trajectoryDataStore.refresh();
+                    }
+                    catch (IOException ex) {
+                        showDialog(ex);
+                    }
+                }
+            });
 
             //Assemble the root StackPane
             StackPane root = new StackPane();
@@ -94,24 +105,26 @@ public class App extends Application {
 
             stage.setScene(scene);
             stage.show();
-            
 
         }
         catch (Exception ex) {
-            MonologFX dialog = new MonologFX(MonologFX.Type.ERROR);
-            dialog.setTitle(ex.toString());
-            dialog.setMessage(ExceptionUtils.getFullStackTrace(ex));
-            dialog.showDialog();
-            ex.printStackTrace();
+            showDialog(ex);
             stop();
         }
+    }
+
+    private void showDialog(Exception ex) {
+        MonologFX dialog = new MonologFX(MonologFX.Type.ERROR);
+        dialog.setTitle(ex.toString());
+        dialog.setMessage(ExceptionUtils.getFullStackTrace(ex));
+        dialog.showDialog();
+        ex.printStackTrace();
     }
 
     private MenuBar createMenuBar() {
         MenuBar bar = new MenuBar();
 
         final Menu fileMenu = new Menu("File");
-
 
         final MenuItem openItem = new MenuItem("Open...");
         openItem.setAccelerator(KeyCombination.keyCombination("Shortcut+O"));
@@ -124,30 +137,14 @@ public class App extends Application {
 
         fileMenu.getItems().add(openItem);
 
-        bar.getMenus().add(fileMenu);
-
-        final Menu editMenu = new Menu("Edit");
-        final MenuItem undoItem = new MenuItem("Undo");
-        undoItem.setAccelerator(KeyCombination.keyCombination("Shortcut+Z"));
-        undoItem.setOnAction(new EventHandler<ActionEvent>() {
-            @Override
-            public void handle(ActionEvent t) {
-                model.undo();
-            }
-        });
-
-        editMenu.getItems().add(undoItem);
-        bar.getMenus().add(editMenu);
-
         return bar;
     }
-
 
     @Override
     public void stop() {
         try {
             // Close the database connection
-            if(trajectoryDataStore != null) {
+            if (trajectoryDataStore != null) {
                 trajectoryDataStore.close();
             }
         }

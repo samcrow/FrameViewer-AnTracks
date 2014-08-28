@@ -180,7 +180,7 @@ public class DatabaseTrajectoryDataStore extends MultiFrameDataStore<Trajectory>
         try (ResultSet points = selectPointsInTrajectory(trajectoryId)) {
 
             Trajectory trajectory;
-                        // Get the first point. Because the query involved an ORDER BY frame_number request,
+            // Get the first point. Because the query involved an ORDER BY frame_number request,
             // this point must have the lowest frame number.
             if (points.next()) {
                 final Point firstPoint = pointFromResultSet(points);
@@ -200,8 +200,8 @@ public class DatabaseTrajectoryDataStore extends MultiFrameDataStore<Trajectory>
                 final Point point = pointFromResultSet(points);
                 trajectory.set(point.getFrame(), point);
             }
+            return trajectory;
         }
-        return null;
     }
 
     private ResultSet selectTrajectories() throws SQLException {
@@ -487,7 +487,7 @@ public class DatabaseTrajectoryDataStore extends MultiFrameDataStore<Trajectory>
 
                 });
 
-        if (foundIndex <= 0) {
+        if (foundIndex >= 0) {
             return data.get(foundIndex);
         }
         else {

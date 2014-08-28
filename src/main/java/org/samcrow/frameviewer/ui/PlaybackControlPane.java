@@ -1,15 +1,15 @@
 package org.samcrow.frameviewer.ui;
 
-import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleObjectProperty;
+import javafx.event.ActionEvent;
+import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
-import javafx.scene.control.CheckBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.Slider;
 import javafx.scene.input.KeyCode;
@@ -43,6 +43,8 @@ public class PlaybackControlPane extends HBox {
     private final PlaybackControlModel model;
 
     
+    private final Button refreshButton;
+    
     private final ObjectProperty<TrajectoryTool> trajectoryTool = new SimpleObjectProperty<>();
     
     private final ObjectProperty<TrajectoryDisplayMode> trajectoryDisplayMode = new SimpleObjectProperty<>();
@@ -56,6 +58,13 @@ public class PlaybackControlPane extends HBox {
 
         setPadding(PADDING);
         setAlignment(Pos.CENTER);
+        
+        // Refresh button
+        {
+            refreshButton = new Button("Refresh");
+            getChildren().add(refreshButton);
+            setMargin(refreshButton, PADDING);
+        }
         
         // Left spacer
         {
@@ -208,6 +217,10 @@ public class PlaybackControlPane extends HBox {
     
     public final DoubleProperty trajectoryAlphaProperty() {
         return trajectoryAlpha;
+    }
+    
+    public final void setOnRefreshRequested(EventHandler<ActionEvent> handler) {
+        refreshButton.setOnAction(handler);
     }
     
     /**
