@@ -90,9 +90,8 @@ public class App extends Application {
             final PlaybackControlPane controls = new PlaybackControlPane(model);
             box.getChildren().add(controls);
             
-            // Hook up the trajectory display toggle
-            controls.setTrajectoriesDisplayed(true);
-            canvas.showingTrajectoriesProperty().bind(controls.trajectoriesDisplayedProperty());
+            // Hook up the trajectory display options
+            
             // Hook up trajectory tool select
             canvas.trajectoryToolProperty().bindBidirectional(controls.trajectoryToolProperty());
 

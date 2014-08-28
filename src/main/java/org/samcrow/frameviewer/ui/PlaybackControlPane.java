@@ -3,16 +3,12 @@ package org.samcrow.frameviewer.ui;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
-import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.Label;
-import javafx.scene.control.Toggle;
-import javafx.scene.control.ToggleButton;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyCodeCombination;
 import javafx.scene.layout.HBox;
@@ -43,10 +39,10 @@ public class PlaybackControlPane extends HBox {
 
     private final PlaybackControlModel model;
 
-    // Trajectory display box
-    private final CheckBox trajectoryDisplayBox;
     
-    final ObjectProperty<TrajectoryTool> trajectoryTool = new SimpleObjectProperty<>();
+    private final ObjectProperty<TrajectoryTool> trajectoryTool = new SimpleObjectProperty<>();
+    
+    private final ObjectProperty<TrajectoryDisplayMode> trajectoryDisplayMode = new SimpleObjectProperty<>();
 
     public PlaybackControlPane(PlaybackControlModel model) {
         this.model = model;
@@ -163,30 +159,15 @@ public class PlaybackControlPane extends HBox {
         // Display mode select
         {
             final SplitButtonBar<TrajectoryDisplayMode> displayChoice = new SplitButtonBar<>(TrajectoryDisplayMode.values(), TrajectoryDisplayMode.Full);
+            trajectoryDisplayMode.bindBidirectional(displayChoice.selectedItemProperty());
             
             getChildren().add(displayChoice);
             setMargin(displayChoice, PADDING);
         }
 
-        {
-            trajectoryDisplayBox = new CheckBox("Show trajectories");
-            getChildren().add(trajectoryDisplayBox);
-            setMargin(trajectoryDisplayBox, PADDING);
-        }
 
     }
 
-    public final void setTrajectoriesDisplayed(boolean displayed) {
-        trajectoryDisplayBox.setSelected(displayed);
-    }
-
-    public final boolean isTrajectoriesDisplayed() {
-        return trajectoryDisplayBox.isSelected();
-    }
-
-    public final BooleanProperty trajectoriesDisplayedProperty() {
-        return trajectoryDisplayBox.selectedProperty();
-    }
 
     public final TrajectoryTool getTrajectoryTool() {
         return trajectoryTool.get();
@@ -198,6 +179,18 @@ public class PlaybackControlPane extends HBox {
     
     public final ObjectProperty<TrajectoryTool> trajectoryToolProperty() {
         return trajectoryTool;
+    }
+    
+    public final TrajectoryDisplayMode getTrajectoryDisplayMode() {
+        return trajectoryDisplayMode.get();
+    }
+    
+    public final void setTrajectoryDisplayMode(TrajectoryDisplayMode mode) {
+        trajectoryDisplayMode.set(mode);
+    }
+    
+    public final ObjectProperty<TrajectoryDisplayMode> trajectoryDisplayModeProperty() {
+        return trajectoryDisplayMode;
     }
     
     /**

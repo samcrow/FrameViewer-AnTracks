@@ -4,10 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 import javafx.beans.InvalidationListener;
 import javafx.beans.Observable;
-import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.ObjectProperty;
-import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ChangeListener;
@@ -20,6 +18,7 @@ import javafx.scene.input.MouseEvent;
 import org.samcrow.frameviewer.PaintableCanvas;
 import org.samcrow.frameviewer.io3.DatabaseTrajectoryDataStore;
 import org.samcrow.frameviewer.trajectory.Trajectory;
+import org.samcrow.frameviewer.trajectory.TrajectoryDisplayMode;
 import org.samcrow.frameviewer.trajectory.TrajectoryTool;
 import org.samcrow.frameviewer.trajectory.ui.CreateModeController;
 import org.samcrow.frameviewer.trajectory.ui.EditModeController;
@@ -63,7 +62,7 @@ public class FrameCanvas extends PaintableCanvas {
      */
     private double imageHeight;
 
-    private final BooleanProperty showTrajectories = new SimpleBooleanProperty(true);
+    private final ObjectProperty<TrajectoryDisplayMode> displayMode = new SimpleObjectProperty<>(TrajectoryDisplayMode.Full);
     
     private DatabaseTrajectoryDataStore dataStore;
     
@@ -109,7 +108,7 @@ public class FrameCanvas extends PaintableCanvas {
         });
         
         // Repaint when the trajectory display state changes
-        showTrajectories.addListener(new InvalidationListener() {
+        displayMode.addListener(new InvalidationListener() {
             @Override
             public void invalidated(Observable o) {
                 // Update trajectories 
@@ -190,7 +189,7 @@ public class FrameCanvas extends PaintableCanvas {
 
             gc.drawImage(image.get(), imageTopLeftX, imageTopLeftY, imageWidth, imageHeight);
 
-            if(isShowingTrajectories()) {
+            if(getDisplayMode() != TrajectoryDisplayMode.Hidden) {
                 gc.save();
 
                 // Draw trajectories
@@ -295,14 +294,14 @@ public class FrameCanvas extends PaintableCanvas {
         trajectories.set(dataStore.getObjectsNearCurrentFrame(20));
     }
     
-    public final boolean isShowingTrajectories() {
-        return showTrajectories.get();
+    public final TrajectoryDisplayMode getDisplayMode() {
+        return displayMode.get();
     }
-    public final void setShowingTrajectories(boolean showTrajectories) {
-        this.showTrajectories.set(showTrajectories);
+    public final void setDisplayMode(TrajectoryDisplayMode mode) {
+        displayMode.set(mode);
     }
-    public final BooleanProperty showingTrajectoriesProperty() {
-        return showTrajectories;
+    public final ObjectProperty<TrajectoryDisplayMode> displayModeProperty() {
+        return displayMode;
     }
     
     public final TrajectoryTool getTrajectoryTool() {
