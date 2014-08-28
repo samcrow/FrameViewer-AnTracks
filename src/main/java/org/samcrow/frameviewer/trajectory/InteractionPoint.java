@@ -76,10 +76,15 @@ public class InteractionPoint extends Point {
         return metAntActivity;
     }
 
-    public void setMetAntActivity(Activity metAnActivity) {
-        this.metAntActivity = metAnActivity;
+    public void setMetAntActivity(Activity metAntActivity) {
+        // Ensure not null
+        if(metAntActivity == null) {
+            metAntActivity = Activity.NotCarrying;
+        }
+        
+        this.metAntActivity = metAntActivity;
         if(otherPoint != null) {
-            otherPoint.activity = metAnActivity;
+            otherPoint.activity = metAntActivity;
         }
     }
 
@@ -88,6 +93,10 @@ public class InteractionPoint extends Point {
     }
 
     public void setType(InteractionType type) {
+        // Ensure not null
+        if(type == null) {
+            type = InteractionType.Unknown;
+        }
         this.type = type;
         if(otherPoint != null) {
             // Set the type of the other marker
