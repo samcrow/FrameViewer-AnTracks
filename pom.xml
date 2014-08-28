@@ -4,11 +4,11 @@
 
     <groupId>org.samcrow</groupId>
     <artifactId>TrajectoryCreator</artifactId>
-    <version>1.5.2beta1</version>
+    <version>2.0.0beta1</version>
     <packaging>jar</packaging>
 
     <name>Trajectory Creator</name>
-    <url>https://github.com/samcrow/FrameViewer</url>
+    <url>https://github.com/samcrow/FrameViewer-AnTracks</url>
     
     <organization>
         <name>Sam Crow</name>

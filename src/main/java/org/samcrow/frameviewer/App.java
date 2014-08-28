@@ -102,6 +102,8 @@ public class App extends Application {
             // Hook up the trajectory display toggle
             controls.setTrajectoriesDisplayed(true);
             canvas.showingTrajectoriesProperty().bind(controls.trajectoriesDisplayedProperty());
+            // Hook up trajectory tool select
+            canvas.trajectoryToolProperty().bind(controls.trajectoryToolProperty());
 
             //Assemble the root StackPane
             StackPane root = new StackPane();
