@@ -22,7 +22,7 @@ public class ToggleButtonGroup extends HBox {
                         final List<? extends Node> addedNodes = change.getAddedSubList();
 
                         for(Node node : addedNodes) {
-                            node.setStyle("-fx-border-radius: 0;");
+                            node.setStyle("-fx-background-radius: 0;");
                         }
                     }
                 }
