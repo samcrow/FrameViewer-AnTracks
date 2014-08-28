@@ -62,7 +62,7 @@ public class App extends Application {
             bar.setUseSystemMenuBar(true);
             box.getChildren().add(bar);
 
-            trajectoryDataStore = DatabaseTrajectoryDataStore.readFrom("127.0.0.1", "FrameViewer", "FrameViewer", "FrameViewer");
+            trajectoryDataStore = DatabaseTrajectoryDataStore.readFrom("192.168.3.100", "FrameViewer", "FrameViewer", "FrameViewer");
             FrameFinder finder = new FrameFinder(frameDir);
             model = new DataStoringPlaybackControlModel(finder, trajectoryDataStore);
 
