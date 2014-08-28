@@ -43,6 +43,8 @@ public class EditModeController extends FrameController {
         if (activePoint != null) {
             
             PointEditDialog dialog = new PointEditDialog(activeTrajectory, activePoint, getScene().getWindow());
+            dialog.setX(event.getScreenX());
+            dialog.setY(event.getScreenY());
             dialog.showAndWait();
 
             if(dialog.result == PointEditDialog.Result.Save) {
@@ -68,6 +70,7 @@ public class EditModeController extends FrameController {
                     }
                 }
                 
+                activeTrajectory.set(getCurrentFrame(), activePoint);
                 save(activePoint, activeTrajectory.getId());
                 repaint();
             }

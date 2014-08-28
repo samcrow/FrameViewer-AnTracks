@@ -73,6 +73,9 @@ public class PointEditDialog extends Stage {
         }
         else {
             interactionBox.setSelected(false);
+            // Default values for interaction fields
+            interactionTypeGroup.setValue(InteractionType.Unknown);
+            metActivityGroup.setValue(Point.Activity.NotCarrying);
         }
     }
     
