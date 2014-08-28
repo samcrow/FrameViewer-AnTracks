@@ -1,6 +1,8 @@
 package org.samcrow.frameviewer.ui;
 
 import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.geometry.Insets;
@@ -9,12 +11,15 @@ import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.Label;
+import javafx.scene.control.Toggle;
 import javafx.scene.control.ToggleButton;
-import javafx.scene.control.ToolBar;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyCodeCombination;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
+import javafx.scene.layout.Region;
 import org.samcrow.frameviewer.PlaybackControlModel;
+import org.samcrow.frameviewer.trajectory.TrajectoryTool;
 
 import static javafx.scene.layout.HBox.setMargin;
 
@@ -39,6 +44,8 @@ public class PlaybackControlPane extends HBox {
 
     // Trajectory display box
     private final CheckBox trajectoryDisplayBox;
+    
+    final ObjectProperty<TrajectoryTool> trajectoryTool = new SimpleObjectProperty<>();
 
     public PlaybackControlPane(PlaybackControlModel model) {
         this.model = model;
@@ -47,6 +54,13 @@ public class PlaybackControlPane extends HBox {
 
         setPadding(PADDING);
         setAlignment(Pos.CENTER);
+        
+        // Left spacer
+        {
+            final Region spacer = new Region();
+            getChildren().add(spacer);
+            setHgrow(spacer, Priority.ALWAYS);
+        }
 
         {
             playBackwardsButton = new Button("<");
@@ -127,27 +141,56 @@ public class PlaybackControlPane extends HBox {
             setMargin(playForwardButton, PADDING);
         }
 
+        
+        // Right spacer
+        {
+            final Region spacer = new Region();
+            getChildren().add(spacer);
+            setHgrow(spacer, Priority.ALWAYS);
+        }
+
+        // Mode select
+        {
+            final ToggleButton createButton = new ToggleButton("Create");
+            final ToggleButton editButton = new ToggleButton("Edit");
+            
+            final SplitButtonBar toolBar = new SplitButtonBar();
+            toolBar.getChildren().addAll(createButton, editButton);
+            toolBar.setSelectedToggle(createButton);
+            
+            toolBar.selectedToggleProperty().addListener(new ChangeListener<Toggle>() {
+                @Override
+                public void changed(ObservableValue<? extends Toggle> ov, Toggle t, Toggle newValue) {
+                    if(newValue == createButton) {
+                        trajectoryTool.set(TrajectoryTool.Create);
+                    }
+                    else if(newValue == editButton) {
+                        trajectoryTool.set(TrajectoryTool.Edit);
+                    }
+                }
+            });
+            trajectoryTool.addListener(new ChangeListener<TrajectoryTool>() {
+                @Override
+                public void changed(ObservableValue<? extends TrajectoryTool> ov, TrajectoryTool t, TrajectoryTool newValue) {
+                    switch(newValue) {
+                        case Create:
+                            toolBar.setSelectedToggle(createButton);
+                            break;
+                        case Edit:
+                            toolBar.setSelectedToggle(editButton);
+                            break;
+                    }
+                }
+            });
+
+            getChildren().add(toolBar);
+            setMargin(toolBar, PADDING);
+        }
+
         {
             trajectoryDisplayBox = new CheckBox("Show trajectories");
             getChildren().add(trajectoryDisplayBox);
             setMargin(trajectoryDisplayBox, PADDING);
-        }
-        // Toolbar test
-        {
-            final ToggleButton createButton = new ToggleButton("Create");
-            final ToggleButton editButton = new ToggleButton("Edit");
-            createButton.selectedProperty().addListener(new ChangeListener<Boolean>() {
-                @Override
-                public void changed(ObservableValue<? extends Boolean> observable, Boolean oldValue, Boolean newValue) {
-                    
-                }
-            });
-            final ToggleButtonGroup toolBar = new ToggleButtonGroup();
-            toolBar.getChildren().addAll(createButton, editButton);
-            
-            
-            getChildren().add(toolBar);
-            setMargin(toolBar, PADDING);
         }
 
     }
@@ -164,6 +207,18 @@ public class PlaybackControlPane extends HBox {
         return trajectoryDisplayBox.selectedProperty();
     }
 
+    public final TrajectoryTool getTrajectoryTool() {
+        return trajectoryTool.get();
+    }
+    
+    public final void setTrajectoryTool(TrajectoryTool tool) {
+        trajectoryTool.set(tool);
+    }
+    
+    public final ObjectProperty<TrajectoryTool> trajectoryToolProperty() {
+        return trajectoryTool;
+    }
+    
     /**
      * Sets up global keyboard shortcuts. Must be called after this pane
      * is attached to a scene.
