@@ -4,8 +4,10 @@ import java.util.ArrayList;
 import java.util.List;
 import javafx.beans.InvalidationListener;
 import javafx.beans.Observable;
+import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ChangeListener;
@@ -64,6 +66,8 @@ public class FrameCanvas extends PaintableCanvas {
 
     private final ObjectProperty<TrajectoryDisplayMode> displayMode = new SimpleObjectProperty<>(TrajectoryDisplayMode.Full);
     
+    private final DoubleProperty trajectoryAlpha = new SimpleDoubleProperty(1);
+    
     private DatabaseTrajectoryDataStore dataStore;
     
     private final CreateModeController createController;
@@ -94,6 +98,19 @@ public class FrameCanvas extends PaintableCanvas {
 
         //Repaint when the frame or the markers changes
         image.addListener(new InvalidationListener() {
+            @Override
+            public void invalidated(Observable o) {
+
+                // Update trajectories 
+                if (dataStore != null) {
+                    trajectories.set(dataStore.getObjectsNearCurrentFrame(20));
+                }
+
+                requestFocus();
+                repaint();
+            }
+        });
+        trajectoryAlpha.addListener(new InvalidationListener() {
             @Override
             public void invalidated(Observable o) {
 
@@ -191,12 +208,14 @@ public class FrameCanvas extends PaintableCanvas {
 
             if(getDisplayMode() != TrajectoryDisplayMode.Hidden) {
                 gc.save();
+                gc.setGlobalAlpha(trajectoryAlpha.get());
 
                 // Draw trajectories
                 for (Trajectory trajectory : trajectories.get()) {
                     trajectory.paint(gc, image.get().getWidth(), image.get().getHeight(), imageWidth, imageHeight, imageTopLeftX, imageTopLeftY, getCurrentFrame(), getDisplayMode());
                 }
 
+                gc.setGlobalAlpha(1);
                 gc.restore();
             }
         }
@@ -314,9 +333,12 @@ public class FrameCanvas extends PaintableCanvas {
         return tool;
     }
     
+    public final DoubleProperty trajectoryAlphaProperty() {
+        return trajectoryAlpha;
+    }
+    
     private static ObjectProperty<List<Trajectory>> createTrajectoriesProperty() {
         final List<Trajectory> initialList = new ArrayList<>();
         return new SimpleObjectProperty<>(initialList);
     }
-    
 }

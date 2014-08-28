@@ -1,7 +1,9 @@
 package org.samcrow.frameviewer.ui;
 
 import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -9,6 +11,7 @@ import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.Label;
+import javafx.scene.control.Slider;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyCodeCombination;
 import javafx.scene.layout.HBox;
@@ -43,6 +46,8 @@ public class PlaybackControlPane extends HBox {
     private final ObjectProperty<TrajectoryTool> trajectoryTool = new SimpleObjectProperty<>();
     
     private final ObjectProperty<TrajectoryDisplayMode> trajectoryDisplayMode = new SimpleObjectProperty<>();
+    
+    private final DoubleProperty trajectoryAlpha = new SimpleDoubleProperty(1);
 
     public PlaybackControlPane(PlaybackControlModel model) {
         this.model = model;
@@ -165,6 +170,14 @@ public class PlaybackControlPane extends HBox {
             setMargin(displayChoice, PADDING);
         }
 
+        // Trajectory opacity
+        {
+            final Slider slider = new Slider(0, 1, 1);
+            trajectoryAlpha.bindBidirectional(slider.valueProperty());
+            
+            getChildren().add(slider);
+            setMargin(slider, PADDING);
+        }
 
     }
 
@@ -191,6 +204,10 @@ public class PlaybackControlPane extends HBox {
     
     public final ObjectProperty<TrajectoryDisplayMode> trajectoryDisplayModeProperty() {
         return trajectoryDisplayMode;
+    }
+    
+    public final DoubleProperty trajectoryAlphaProperty() {
+        return trajectoryAlpha;
     }
     
     /**
