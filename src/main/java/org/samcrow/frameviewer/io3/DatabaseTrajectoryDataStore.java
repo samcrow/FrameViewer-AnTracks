@@ -393,7 +393,8 @@ public class DatabaseTrajectoryDataStore extends MultiFrameDataStore<Trajectory>
             statement.executeUpdate("DROP TABLE IF EXISTS `" + trajectoriesTableName + "`");
             statement.executeUpdate("CREATE TABLE `" + trajectoriesTableName + "` ("
                     + "`trajectory_id` INTEGER PRIMARY KEY,"
-                    + "`move_type` varchar(255) NOT NULL DEFAULT 'Unknown'"
+                    + "`start_action` varchar(255) NOT NULL DEFAULT 'Unknown',"
+                    + "`end_action` varchar(255) NOT NULL DEFAULT 'Unknown'"
                     + ")");
 
             // Set up Points table
