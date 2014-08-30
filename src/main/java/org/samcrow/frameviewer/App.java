@@ -69,7 +69,7 @@ public class App extends Application {
                 stop();
             }
             
-            trajectoryDataStore = new DatabaseTrajectoryDataStore(dialog.getConnection());
+            trajectoryDataStore = new DatabaseTrajectoryDataStore(dialog.getConnection(), dialog.getPointsTableName(), dialog.getTrajectoriesTableName());
             FrameFinder finder = new FrameFinder(frameDir);
             model = new DataStoringPlaybackControlModel(finder, trajectoryDataStore);
 

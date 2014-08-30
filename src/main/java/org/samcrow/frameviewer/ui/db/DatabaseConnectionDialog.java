@@ -2,6 +2,7 @@ package org.samcrow.frameviewer.ui.db;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import javafx.event.ActionEvent;
@@ -36,6 +37,8 @@ public class DatabaseConnectionDialog extends Stage {
     private Connection connection = null;
 
     private boolean success = false;
+    private String pointsTableName;
+    private String trajectoriesTableName;
 
     public DatabaseConnectionDialog(String connectionTypeName) {
         this.connectionTypeName = connectionTypeName;
@@ -69,7 +72,7 @@ public class DatabaseConnectionDialog extends Stage {
 
         switchToConnection();
 
-        final Scene scene = new Scene(root, root.getPrefWidth(), root.getPrefHeight());
+        final Scene scene = new Scene(root, 220, root.getPrefHeight());
         setScene(scene);
     }
 
@@ -94,7 +97,7 @@ public class DatabaseConnectionDialog extends Stage {
                             connectionView.getUsername(), 
                             connectionView.getPassword());
 
-            switchToDatabaseSelection();
+            switchToDataSetSelection();
 
         }
         catch (SQLException ex) {
@@ -106,32 +109,58 @@ public class DatabaseConnectionDialog extends Stage {
         }
     }
 
-    private void selectDatabase() {
-        final String dbName = selectionView.getSelectedDataSet();
-        if (dbName.isEmpty()) {
-            showDialog("Database required", "Please enter a database name");
+    private void selectDataSet() {
+        final String dataSetName = selectionView.getSelectedDataSet();
+        if (dataSetName.isEmpty()) {
+            showDialog("Data set required", "Please enter a data set name");
             return;
         }
         try {
-            connection.setCatalog(dbName);
+            pointsTableName = dataSetName+"_points";
+            trajectoriesTableName = dataSetName+"_trajectories";
+            
+            // Verify that the tables exist
+            try (ResultSet tables = connection.getMetaData().getTables(connection.getCatalog(), null, pointsTableName, null)) {
+                if(!tables.next()) {
+                    throw new SQLException("No points table exists");
+                }
+            }
+            try (ResultSet tables = connection.getMetaData().getTables(connection.getCatalog(), null, trajectoriesTableName, null)) {
+                if(!tables.next()) {
+                    throw new SQLException("No points table exists");
+                }
+            }
+            
             success = true;
+            pointsTableName = dataSetName+"_points";
+            trajectoriesTableName = dataSetName+"_trajectories";
             hide();
         }
         catch (SQLException ex) {
-            // Database does not exist. Try to create it
+            // Tables do not exist. Try to create them.
             try (Statement statement = connection.createStatement()) {
-                statement.executeUpdate("CREATE DATABASE " + dbName);
-                connection.setCatalog(dbName);
+                
+                statement.executeUpdate("DROP TABLE IF EXISTS "+pointsTableName);
+                statement.executeUpdate("DROP TABLE IF EXISTS "+trajectoriesTableName);
+                
+                statement.executeUpdate("CREATE TABLE "+pointsTableName+" ( `id` INT(11) PRIMARY KEY AUTO_INCREMENT ) ");
+                statement.executeUpdate("CREATE TABLE "+trajectoriesTableName+" ( `id` INT(11) PRIMARY KEY AUTO_INCREMENT ) ");
+                
+                // Now drop the tables so that the other class can create them
+                
+                statement.executeUpdate("DROP TABLE "+pointsTableName);
+                statement.executeUpdate("DROP TABLE "+trajectoriesTableName);
+                
                 success = true;
                 hide();
             }
             catch (SQLException ex1) {
-                showDialog("Database could not be created", ex1.getMessage() + "\nTry using a name containing only letters, numbers, and underscores that does not start with a number..");
+                showDialog("The data set could not be created", ex1.getMessage() + "\nTry using a name containing only letters, numbers, and underscores that does not start with a number..");
             }
         }
     }
 
-    private void switchToDatabaseSelection() {
+    private void switchToDataSetSelection() {
         try {
             selectionView = new DataSetSelectionView(connection);
             root.getChildren().set(0, selectionView);
@@ -140,7 +169,7 @@ public class DatabaseConnectionDialog extends Stage {
             nextButton.setOnAction(new EventHandler<ActionEvent>() {
                 @Override
                 public void handle(ActionEvent t) {
-                    selectDatabase();
+                    selectDataSet();
                 }
             });
         }
@@ -181,6 +210,14 @@ public class DatabaseConnectionDialog extends Stage {
 
     public boolean succeeded() {
         return success;
+    }
+    
+    public String getPointsTableName() {
+        return pointsTableName;
+    }
+
+    public String getTrajectoriesTableName() {
+        return trajectoriesTableName;
     }
 
 }

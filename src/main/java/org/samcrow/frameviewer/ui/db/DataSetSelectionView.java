@@ -29,6 +29,7 @@ public class DataSetSelectionView extends VBox {
     public DataSetSelectionView(Connection connection) throws SQLException {
         
         dataSetBox.setEditable(true);
+        dataSetBox.setPrefWidth(200);
         
         getChildren().add(new Label("Select a database to open"));
         getChildren().add(dataSetBox);
@@ -39,9 +40,9 @@ public class DataSetSelectionView extends VBox {
         // Find existing pairs of tables named <name>_trajectories and <name>_points
         final List<String> tableNames = new ArrayList<>();
         final DatabaseMetaData data = connection.getMetaData();
-        try (ResultSet tableResults = data.getSchemas()) {
+        try (ResultSet tableResults = data.getTables(connection.getCatalog(), null, null, null)) {
             while(tableResults.next()) {
-                tableNames.add(tableResults.getString("TABLE_SCHEM"));
+                tableNames.add(tableResults.getString("TABLE_NAME"));
             }
         }
         // Sort the list so that it is in order, and <name>_trajectories follows <name>_points for every <name>

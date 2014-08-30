@@ -4,7 +4,6 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
-import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -25,9 +24,13 @@ import org.samcrow.frameviewer.trajectory.Trajectory;
 public class DatabaseTrajectoryDataStore extends MultiFrameDataStore<Trajectory> implements Closeable, AutoCloseable {
 
     private final Connection connection;
+    private final String pointsTableName;
+    private final String trajectoriesTableName;
 
-    public DatabaseTrajectoryDataStore(Connection connection) throws SQLException {
+    public DatabaseTrajectoryDataStore(Connection connection, String pointsTableName, String trajectoriesTableName) throws SQLException {
         this.connection = connection;
+        this.pointsTableName = pointsTableName;
+        this.trajectoriesTableName = trajectoriesTableName;
         checkSchema();
 
         try (ResultSet trajectories = selectTrajectories()) {
@@ -133,23 +136,19 @@ public class DatabaseTrajectoryDataStore extends MultiFrameDataStore<Trajectory>
         }
     }
 
-    private static void initDatabaseDriver() throws ClassNotFoundException {
-        Class.forName("com.mysql.jdbc.Driver");
-    }
-
     private void checkSchema() throws SQLException {
         DatabaseMetaData dbData = connection.getMetaData();
-        ResultSet tableResults = dbData.getTables(null, null, "%", null);
+        ResultSet tableResults = dbData.getTables(connection.getCatalog(), null, null, null);
 
         boolean hasTrajectories = false;
         boolean hasPoints = false;
 
         while (tableResults.next()) {
             final String tableName = tableResults.getString("TABLE_NAME");
-            if (tableName.equals("trajectories")) {
+            if (tableName.equals(trajectoriesTableName)) {
                 hasTrajectories = true;
             }
-            if (tableName.equals("points")) {
+            if (tableName.equals(pointsTableName)) {
                 hasPoints = true;
             }
         }
@@ -191,15 +190,15 @@ public class DatabaseTrajectoryDataStore extends MultiFrameDataStore<Trajectory>
     }
 
     private ResultSet selectTrajectories() throws SQLException {
-        return connection.createStatement().executeQuery("SELECT * FROM `trajectories` ORDER BY `trajectory_id`");
+        return connection.createStatement().executeQuery("SELECT * FROM `" + trajectoriesTableName + "` ORDER BY `trajectory_id`");
     }
 
     private ResultSet selectOneTrajectory(int trajectoryId) throws SQLException {
-        return connection.createStatement().executeQuery("SELECT * FROM `trajectories` WHERE `trajectory_id`=" + trajectoryId + " LIMIT 1");
+        return connection.createStatement().executeQuery("SELECT * FROM `" + trajectoriesTableName + "` WHERE `trajectory_id`=" + trajectoryId + " LIMIT 1");
     }
 
     private ResultSet selectPointsInTrajectory(int trajectoryId) throws SQLException {
-        return connection.createStatement().executeQuery("SELECT * FROM `points` WHERE `trajectory_id`=" + trajectoryId + " ORDER BY `frame_number`");
+        return connection.createStatement().executeQuery("SELECT * FROM `" + pointsTableName + "` WHERE `trajectory_id`=" + trajectoryId + " ORDER BY `frame_number`");
     }
 
     /**
@@ -229,7 +228,7 @@ public class DatabaseTrajectoryDataStore extends MultiFrameDataStore<Trajectory>
      */
     private void updateTrajectory(Trajectory trajectory) throws SQLException {
         try (Statement statement = connection.createStatement()) {
-            statement.executeUpdate("UPDATE `trajectories` SET "
+            statement.executeUpdate("UPDATE `" + trajectoriesTableName + "` SET "
                     + "`move_type` = '" + trajectory.getMoveType().name() + '\''
                     + " WHERE `trajectory_id` = '" + trajectory.getId() + '\'');
         }
@@ -242,7 +241,7 @@ public class DatabaseTrajectoryDataStore extends MultiFrameDataStore<Trajectory>
 
     private void insertTrajectory(Trajectory trajectory) throws SQLException {
         try (Statement statement = connection.createStatement()) {
-            statement.executeUpdate("INSERT INTO `trajectories` ("
+            statement.executeUpdate("INSERT INTO `" + trajectoriesTableName + "` ("
                     + "`trajectory_id`,"
                     + "`move_type`"
                     + ") VALUES ("
@@ -266,15 +265,15 @@ public class DatabaseTrajectoryDataStore extends MultiFrameDataStore<Trajectory>
 
     private void deleteTrajectoryFromDatabaseOnly(int trajectoryId) throws SQLException {
         try (Statement statement = connection.createStatement()) {
-            statement.executeUpdate("DELETE FROM `points` WHERE `trajectory_id`=" + trajectoryId);
+            statement.executeUpdate("DELETE FROM `" + pointsTableName + "` WHERE `trajectory_id`=" + trajectoryId);
             // Then delete the trajectory
-            statement.executeUpdate("DELETE FROM `trajectories` WHERE `trajectory_id`=" + trajectoryId);
+            statement.executeUpdate("DELETE FROM `" + trajectoriesTableName + "` WHERE `trajectory_id`=" + trajectoryId);
         }
     }
 
     public void deletePoint(int trajectoryId, int frame) throws SQLException {
         try (Statement statement = connection.createStatement()) {
-            statement.executeUpdate("DELETE FROM `points` WHERE `trajectory_id` = " + trajectoryId + " AND `frame_number` = " + frame);
+            statement.executeUpdate("DELETE FROM `" + pointsTableName + "` WHERE `trajectory_id` = " + trajectoryId + " AND `frame_number` = " + frame);
         }
     }
 
@@ -282,7 +281,7 @@ public class DatabaseTrajectoryDataStore extends MultiFrameDataStore<Trajectory>
         try (Statement statement = connection.createStatement()) {
             try (ResultSet existingPoint
                     = statement.executeQuery(
-                            "SELECT * FROM `points` WHERE `trajectory_id` = "
+                            "SELECT * FROM `" + pointsTableName + "` WHERE `trajectory_id` = "
                             + trajectoryId + " AND `frame_number` = " + point.getFrame())) {
                         if (existingPoint.next()) {
                             updatePoint(point, trajectoryId);
@@ -298,7 +297,7 @@ public class DatabaseTrajectoryDataStore extends MultiFrameDataStore<Trajectory>
         try (Statement statement = connection.createStatement()) {
             if (point instanceof InteractionPoint) {
                 InteractionPoint iPoint = (InteractionPoint) point;
-                statement.executeUpdate("UPDATE `points` SET "
+                statement.executeUpdate("UPDATE `" + pointsTableName + "` SET "
                         + "`frame_x` = " + point.getX() + ','
                         + "`frame_y` = " + point.getY() + ','
                         + "`activity` = '" + point.getActivity().name() + "',"
@@ -309,7 +308,7 @@ public class DatabaseTrajectoryDataStore extends MultiFrameDataStore<Trajectory>
                         + " WHERE  `trajectory_id` = " + trajectoryId + " AND `frame_number` = " + point.getFrame());
             }
             else {
-                statement.executeUpdate("UPDATE `points` SET "
+                statement.executeUpdate("UPDATE `" + pointsTableName + "` SET "
                         + "`frame_x` = " + point.getX() + ','
                         + "`frame_y` = " + point.getY() + ','
                         + "`activity` = '" + point.getActivity().name() + "',"
@@ -329,7 +328,7 @@ public class DatabaseTrajectoryDataStore extends MultiFrameDataStore<Trajectory>
      */
     private void demoteFromInteraction(InteractionPoint point, int trajectoryId) throws SQLException {
         try (Statement statement = connection.createStatement()) {
-            statement.executeUpdate("UPDATE `points` SET"
+            statement.executeUpdate("UPDATE `" + pointsTableName + "` SET"
                     + "`is_interaction` = 0"
                     + " WHERE  `trajectory_id` = " + trajectoryId + " AND `frame_number` = " + point.getFrame());
         }
@@ -340,7 +339,7 @@ public class DatabaseTrajectoryDataStore extends MultiFrameDataStore<Trajectory>
             if (point instanceof InteractionPoint) {
                 InteractionPoint iPoint = (InteractionPoint) point;
 
-                statement.executeUpdate("INSERT INTO `points` ("
+                statement.executeUpdate("INSERT INTO `" + pointsTableName + "` ("
                         + "`trajectory_id`,"
                         + "`frame_number`,"
                         + "`frame_x`,"
@@ -364,7 +363,7 @@ public class DatabaseTrajectoryDataStore extends MultiFrameDataStore<Trajectory>
 
             }
             else {
-                final String query = "INSERT INTO `points` ("
+                final String query = "INSERT INTO `" + pointsTableName + "` ("
                         + "`trajectory_id`,"
                         + "`frame_number`,"
                         + "`frame_x`,"
@@ -385,15 +384,15 @@ public class DatabaseTrajectoryDataStore extends MultiFrameDataStore<Trajectory>
 
     private void setUpSchema() throws SQLException {
         try (Statement statement = connection.createStatement()) {
-            statement.executeUpdate("DROP TABLE IF EXISTS `trajectories`");
-            statement.executeUpdate("CREATE TABLE `trajectories` ("
+            statement.executeUpdate("DROP TABLE IF EXISTS `" + trajectoriesTableName + "`");
+            statement.executeUpdate("CREATE TABLE `" + trajectoriesTableName + "` ("
                     + "`trajectory_id` INTEGER PRIMARY KEY,"
                     + "`move_type` varchar(255) NOT NULL DEFAULT 'Unknown'"
                     + ")");
 
             // Set up Points table
-            statement.executeUpdate("DROP TABLE IF EXISTS `points`");
-            statement.executeUpdate("CREATE TABLE `points` ("
+            statement.executeUpdate("DROP TABLE IF EXISTS `" + pointsTableName + "`");
+            statement.executeUpdate("CREATE TABLE `" + pointsTableName + "` ("
                     + "`point_id` INTEGER PRIMARY KEY AUTO_INCREMENT,"
                     + "`trajectory_id` INTEGER NOT NULL,"
                     + "`frame_number` INTEGER NOT NULL,"
