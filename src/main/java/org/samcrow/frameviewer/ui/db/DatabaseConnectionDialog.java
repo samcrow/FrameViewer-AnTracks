@@ -4,8 +4,6 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.geometry.Insets;
@@ -29,14 +27,14 @@ public class DatabaseConnectionDialog extends Stage {
 
     private DatabaseConnectionView connectionView;
 
-    private DatabaseSelectionView selectionView = null;
+    private DataSetSelectionView selectionView = null;
 
     private final Button cancelButton = new Button("Cancel");
 
     private final Button nextButton = new Button("Next");
 
     private Connection connection = null;
-    
+
     private boolean success = false;
 
     public DatabaseConnectionDialog(String connectionTypeName) {
@@ -89,7 +87,12 @@ public class DatabaseConnectionDialog extends Stage {
             }
 
             DriverManager.setLoginTimeout(5);
-            connection = DriverManager.getConnection("jdbc:" + connectionTypeName + "://" + connectionView.getAddress(), connectionView.getUsername(), connectionView.getPassword());
+            connection = DriverManager
+                    .getConnection("jdbc:" + connectionTypeName + "://" 
+                            + connectionView.getAddress() + "/" 
+                            + connectionView.getDatabase(), 
+                            connectionView.getUsername(), 
+                            connectionView.getPassword());
 
             switchToDatabaseSelection();
 
@@ -97,15 +100,15 @@ public class DatabaseConnectionDialog extends Stage {
         catch (SQLException ex) {
             MonologFX dialog = new MonologFX(MonologFX.Type.ERROR);
             dialog.setTitle("Could not connect to database");
-            dialog.setMessage(ex.getMessage() + "\nPlease ensure that the address, username, and password are correct.");
+            dialog.setMessage(ex.getMessage() + "\nPlease ensure that the address, username, password, and database are correct.");
             dialog.showDialog();
             ex.printStackTrace();
         }
     }
 
     private void selectDatabase() {
-        final String dbName = selectionView.getSelectedDatabase();
-        if(dbName.isEmpty()) {
+        final String dbName = selectionView.getSelectedDataSet();
+        if (dbName.isEmpty()) {
             showDialog("Database required", "Please enter a database name");
             return;
         }
@@ -117,20 +120,20 @@ public class DatabaseConnectionDialog extends Stage {
         catch (SQLException ex) {
             // Database does not exist. Try to create it
             try (Statement statement = connection.createStatement()) {
-                statement.executeUpdate("CREATE DATABASE "+dbName);
+                statement.executeUpdate("CREATE DATABASE " + dbName);
                 connection.setCatalog(dbName);
                 success = true;
                 hide();
             }
             catch (SQLException ex1) {
-                showDialog("Database could not be created", ex1.getMessage()+"\nTry using a name containing only letters, numbers, and underscores that does not start with a number..");
+                showDialog("Database could not be created", ex1.getMessage() + "\nTry using a name containing only letters, numbers, and underscores that does not start with a number..");
             }
         }
     }
 
     private void switchToDatabaseSelection() {
         try {
-            selectionView = new DatabaseSelectionView(connection);
+            selectionView = new DataSetSelectionView(connection);
             root.getChildren().set(0, selectionView);
             connectionView = null;
 
@@ -175,7 +178,7 @@ public class DatabaseConnectionDialog extends Stage {
     public Connection getConnection() {
         return connection;
     }
-    
+
     public boolean succeeded() {
         return success;
     }

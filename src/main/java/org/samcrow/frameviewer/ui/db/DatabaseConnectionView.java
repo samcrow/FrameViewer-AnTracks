@@ -18,14 +18,17 @@ public class DatabaseConnectionView extends VBox {
     
     private final TextField passwordField = new PasswordField();
     
+    private final TextField databaseField = new TextField();
+    
     public DatabaseConnectionView() {
         final Insets MARGIN = new Insets(5);
         
         addressField.setPromptText("Address");
         usernameField.setPromptText("Username");
         passwordField.setPromptText("Password");
+        databaseField.setPromptText("Database");
         
-        getChildren().addAll(addressField, usernameField, passwordField);
+        getChildren().addAll(addressField, usernameField, passwordField, databaseField);
         for(Node node : getChildrenUnmodifiable()) {
             setMargin(node, MARGIN);
         }
@@ -41,6 +44,10 @@ public class DatabaseConnectionView extends VBox {
     
     public String getPassword() {
         return passwordField.getText();
+    }
+    
+    public String getDatabase() {
+        return databaseField.getText();
     }
     
 }
