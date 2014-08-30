@@ -19,12 +19,11 @@ import org.samcrow.frameviewer.io3.DatabaseTrajectoryDataStore;
  */
 public class Trajectory implements MultiFrameObject, Iterable<Point> {
 
-    public static enum MoveType {
+    public static enum EndAction {
 
         Unknown,
-        Ascending,
-        Descending,
-        FromAndIntoTunnel,
+        IntoTunnel,
+        OutOfTunnel,
         ;
 
         /**
@@ -35,7 +34,7 @@ public class Trajectory implements MultiFrameObject, Iterable<Point> {
          * @param name
          * @return
          */
-        public static MoveType safeValueOf(String name) {
+        public static EndAction safeValueOf(String name) {
             try {
                 return valueOf(name);
             }
@@ -58,7 +57,8 @@ public class Trajectory implements MultiFrameObject, Iterable<Point> {
 
     private int id;
 
-    private MoveType moveType;
+    private EndAction startAction = EndAction.Unknown;
+    private EndAction endAction = EndAction.Unknown;
 
     /**
      * The points in this trajectory.
@@ -180,12 +180,20 @@ public class Trajectory implements MultiFrameObject, Iterable<Point> {
         return new NotNullIterator<>(underlying);
     }
 
-    public MoveType getMoveType() {
-        return moveType;
+    public EndAction getStartAction() {
+        return startAction;
     }
 
-    public void setMoveType(MoveType moveType) {
-        this.moveType = moveType;
+    public void setStartAction(EndAction startAction) {
+        this.startAction = startAction;
+    }
+
+    public EndAction getEndAction() {
+        return endAction;
+    }
+
+    public void setEndAction(EndAction endAction) {
+        this.endAction = endAction;
     }
 
     /**

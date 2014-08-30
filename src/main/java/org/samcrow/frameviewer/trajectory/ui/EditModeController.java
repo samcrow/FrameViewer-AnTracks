@@ -50,7 +50,8 @@ public class EditModeController extends FrameController {
             if(dialog.result == PointEditDialog.Result.Save) {
                 
                 activeTrajectory.setId(dialog.getTrajectoryId());
-                activeTrajectory.setMoveType(dialog.getMoveType());
+                activeTrajectory.setStartAction(dialog.getStartAction());
+                activeTrajectory.setEndAction(dialog.getEndAction());
                 activePoint.setActivity(dialog.getActivity());
                 if(dialog.isInteraction()) {
                     // Promote point if needed

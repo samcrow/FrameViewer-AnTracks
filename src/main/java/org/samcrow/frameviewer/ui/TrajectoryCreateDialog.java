@@ -24,7 +24,7 @@ public class TrajectoryCreateDialog extends Stage {
     
     protected final IntegerField antIdField = new IntegerField();
     
-    protected final RadioButtonGroup<Trajectory.MoveType> moveTypeBox = new RadioButtonGroup<>(Trajectory.MoveType.values());
+    protected final RadioButtonGroup<Trajectory.EndAction> startActionBox = new RadioButtonGroup<>(Trajectory.EndAction.values());
     
     protected final RadioButtonGroup<Point.Activity> activityBox = new RadioButtonGroup<>(Point.Activity.values());
     
@@ -44,7 +44,7 @@ public class TrajectoryCreateDialog extends Stage {
         this(parent);
         
         antIdField.setValue(trajectory.getId());
-        moveTypeBox.setValue(trajectory.getMoveType());
+        startActionBox.setValue(trajectory.getStartAction());
         activityBox.setValue(point.getActivity());
     }
     
@@ -68,8 +68,8 @@ public class TrajectoryCreateDialog extends Stage {
         }
         root.getChildren().add(antIdBox);
         
-        moveTypeBox.setPadding(PADDING);
-        root.getChildren().add(moveTypeBox);
+        startActionBox.setPadding(PADDING);
+        root.getChildren().add(startActionBox);
         activityBox.setPadding(PADDING);
         root.getChildren().add(activityBox);
         
@@ -101,7 +101,7 @@ public class TrajectoryCreateDialog extends Stage {
         
         // Set default values
         antIdField.setValue(0);
-        moveTypeBox.setValue(Trajectory.MoveType.Unknown);
+        startActionBox.setValue(Trajectory.EndAction.Unknown);
         activityBox.setValue(Point.Activity.NotCarrying);
         
         // Focus on ID field
@@ -138,8 +138,8 @@ public class TrajectoryCreateDialog extends Stage {
         return antIdField.getValue();
     }
     
-    public Trajectory.MoveType getMoveType() {
-        return moveTypeBox.getValue();
+    public Trajectory.EndAction getStartAction() {
+        return startActionBox.getValue();
     }
     
     public Point.Activity getActivity() {

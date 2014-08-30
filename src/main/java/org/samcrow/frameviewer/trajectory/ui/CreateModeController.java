@@ -1,7 +1,6 @@
 package org.samcrow.frameviewer.trajectory.ui;
 
 import javafx.geometry.Point2D;
-import javafx.scene.Scene;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 import org.samcrow.frameviewer.PaintableCanvas;
@@ -128,7 +127,8 @@ public class CreateModeController extends FrameController {
 
         if (dialog.succeeded()) {
             activeTrajectory.setId(dialog.getTrajectoryId());
-            activeTrajectory.setMoveType(dialog.getMoveType());
+            activeTrajectory.setStartAction(dialog.getStartAction());
+            activeTrajectory.setEndAction(dialog.getEndAction());
             newPoint.setActivity(dialog.getActivity());
 
             activeTrajectory.set(getCurrentFrame(), newPoint);
@@ -168,7 +168,7 @@ public class CreateModeController extends FrameController {
             activeTrajectory.setDataStore(getDataStore());
             getTrajectories().add(activeTrajectory);
             activeTrajectory.setId(dialog.getTrajectoryId());
-            activeTrajectory.setMoveType(dialog.getMoveType());
+            activeTrajectory.setStartAction(dialog.getStartAction());
             getDataStore().add(activeTrajectory);
 
             // Create a new Point at the mouse location
