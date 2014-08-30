@@ -41,8 +41,8 @@ public class PointEditDialog extends Stage {
     // Trajectory
     private final IntegerField trajectoryIdField = new IntegerField();
     
-    private final RadioButtonGroup<Trajectory.EndAction> startAction = new RadioButtonGroup<>(Trajectory.EndAction.values());
-    private final RadioButtonGroup<Trajectory.EndAction> endAction = new RadioButtonGroup<>(Trajectory.EndAction.values());
+    private final RadioButtonGroup<Trajectory.FromAction> fromAction = new RadioButtonGroup<>(Trajectory.FromAction.values());
+    private final RadioButtonGroup<Trajectory.ToAction> toAction = new RadioButtonGroup<>(Trajectory.ToAction.values());
     
     // Point
     private final RadioButtonGroup<Point.Activity> focalActivityGroup = new RadioButtonGroup<>(Point.Activity.values());
@@ -64,8 +64,8 @@ public class PointEditDialog extends Stage {
         // Set up values based on the provided trajectory and point
         trajectoryIdField.setValue(trajectory.getId());
         focalActivityGroup.setValue(point.getActivity());
-        startAction.setValue(trajectory.getStartAction());
-        endAction.setValue(trajectory.getEndAction());
+        fromAction.setValue(trajectory.getFromAction());
+        toAction.setValue(trajectory.getToAction());
         if(point instanceof InteractionPoint) {
             final InteractionPoint iPoint = (InteractionPoint) point;
             
@@ -94,7 +94,7 @@ public class PointEditDialog extends Stage {
         final VBox root = new VBox();
         root.setPadding(new Insets(2));
         
-        root.getChildren().addAll(trajectoryIdField, new Label("Start action"), startAction, new Label("End action"), endAction, focalActivityGroup, interactionBox, interactionTypeGroup, metTrajectoryIdField, metActivityGroup);
+        root.getChildren().addAll(trajectoryIdField, new Label("Start action"), fromAction, new Label("End action"), toAction, focalActivityGroup, interactionBox, interactionTypeGroup, metTrajectoryIdField, metActivityGroup);
         for(Node child : root.getChildren()) {
             VBox.setMargin(child, new Insets(5));
         }
@@ -188,12 +188,12 @@ public class PointEditDialog extends Stage {
         return metActivityGroup.getValue();
     }
     
-    public final Trajectory.EndAction getStartAction() {
-        return startAction.getValue();
+    public final Trajectory.FromAction getFromAction() {
+        return fromAction.getValue();
     }
     
-    public final Trajectory.EndAction getEndAction() {
-        return endAction.getValue();
+    public final Trajectory.ToAction getToAction() {
+        return toAction.getValue();
     }
     
 }

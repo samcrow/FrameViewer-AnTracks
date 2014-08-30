@@ -17,12 +17,12 @@ public class TrajectoryEditDialog extends TrajectoryCreateDialog {
     
     private boolean finalizeRequested = false;
     
-    private final RadioButtonGroup<Trajectory.EndAction> endAction = new RadioButtonGroup<>(Trajectory.EndAction.values());
+    private final RadioButtonGroup<Trajectory.ToAction> toAction = new RadioButtonGroup<>(Trajectory.ToAction.values());
 
     public TrajectoryEditDialog(Window parent, Trajectory trajectory, Point point) {
         super(parent, trajectory, point);
+        addEndActionBox(trajectory.getToAction());
         addFinalizeButtion();
-        addEndActionBox(trajectory.getEndAction());
     }
 
     public TrajectoryEditDialog(Window parent) {
@@ -30,10 +30,10 @@ public class TrajectoryEditDialog extends TrajectoryCreateDialog {
         addFinalizeButtion();
     }
     
-    private void addEndActionBox(Trajectory.EndAction initialValue) {
-        endAction.setValue(initialValue);
-        addNode(endAction);
+    private void addEndActionBox(Trajectory.ToAction initialValue) {
+        toAction.setValue(initialValue);
         addNode(new Label("Trajectory end action"));
+        addNode(toAction);
     }
     
     private void addFinalizeButtion() {
@@ -55,7 +55,7 @@ public class TrajectoryEditDialog extends TrajectoryCreateDialog {
         return finalizeRequested;
     }
     
-    public Trajectory.EndAction getEndAction() {
-        return endAction.getValue();
+    public Trajectory.ToAction getToAction() {
+        return toAction.getValue();
     }
 }

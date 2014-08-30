@@ -63,8 +63,8 @@ public class DatabaseTrajectoryDataStore extends MultiFrameDataStore<Trajectory>
                 if (existingTrajectory != null) {
                     // Propagate properties from the database trajectory to the existing one
 
-                    existingTrajectory.setStartAction(Trajectory.EndAction.safeValueOf(trajectories.getString("start_action")));
-                    existingTrajectory.setEndAction(Trajectory.EndAction.safeValueOf(trajectories.getString("end_action")));
+                    existingTrajectory.setFromAction(Trajectory.FromAction.safeValueOf(trajectories.getString("from_action")));
+                    existingTrajectory.setToAction(Trajectory.ToAction.safeValueOf(trajectories.getString("to_action")));
 
                     // Points
                     try (ResultSet points = selectPointsInTrajectory(existingTrajectory.getId())) {
@@ -161,8 +161,8 @@ public class DatabaseTrajectoryDataStore extends MultiFrameDataStore<Trajectory>
 
     private Trajectory createTrajectoryAndPoints(ResultSet trajectories) throws SQLException {
         final int trajectoryId = trajectories.getInt("trajectory_id");
-        final Trajectory.EndAction startAction = Trajectory.EndAction.safeValueOf(trajectories.getString("start_action"));
-        final Trajectory.EndAction endAction = Trajectory.EndAction.safeValueOf(trajectories.getString("end_action"));
+        final Trajectory.FromAction startAction = Trajectory.FromAction.safeValueOf(trajectories.getString("from_action"));
+        final Trajectory.ToAction endAction = Trajectory.ToAction.safeValueOf(trajectories.getString("to_action"));
 
         try (ResultSet points = selectPointsInTrajectory(trajectoryId)) {
 
@@ -172,8 +172,8 @@ public class DatabaseTrajectoryDataStore extends MultiFrameDataStore<Trajectory>
             if (points.next()) {
                 final Point firstPoint = pointFromResultSet(points);
                 trajectory = new Trajectory(firstPoint.getFrame(), firstPoint.getFrame() + 1, trajectoryId);
-                trajectory.setStartAction(startAction);
-                trajectory.setEndAction(endAction);
+                trajectory.setFromAction(startAction);
+                trajectory.setToAction(endAction);
                 trajectory.setDataStore(this);
 
                 trajectory.set(firstPoint.getFrame(), firstPoint);
@@ -232,8 +232,8 @@ public class DatabaseTrajectoryDataStore extends MultiFrameDataStore<Trajectory>
     private void updateTrajectory(Trajectory trajectory) throws SQLException {
         try (Statement statement = connection.createStatement()) {
             statement.executeUpdate("UPDATE `" + trajectoriesTableName + "` SET "
-                    + "`start_action` = '" + trajectory.getStartAction().name() + "',"
-                    + " `end_action` = '" + trajectory.getEndAction().name() + '\''
+                    + "`from_action` = '" + trajectory.getFromAction().name() + "',"
+                    + " `to_action` = '" + trajectory.getToAction().name() + '\''
                     + " WHERE `trajectory_id` = '" + trajectory.getId() + '\'');
         }
 
@@ -247,12 +247,12 @@ public class DatabaseTrajectoryDataStore extends MultiFrameDataStore<Trajectory>
         try (Statement statement = connection.createStatement()) {
             statement.executeUpdate("INSERT INTO `" + trajectoriesTableName + "` ("
                     + "`trajectory_id`, "
-                    + "`start_action`, "
-                    + "`end_action`,"
+                    + "`from_action`, "
+                    + "`to_action`"
                     + " ) VALUES ( "
                     + trajectory.getId() + ","
-                    + '\'' + trajectory.getStartAction().name() + "', "
-                    + '\'' + trajectory.getEndAction().name() + "'"
+                    + '\'' + trajectory.getFromAction().name() + "', "
+                    + '\'' + trajectory.getToAction().name() + "'"
                     + ")");
 
             // Points: It is safe to assume that no points with this trajectory exist
@@ -393,8 +393,8 @@ public class DatabaseTrajectoryDataStore extends MultiFrameDataStore<Trajectory>
             statement.executeUpdate("DROP TABLE IF EXISTS `" + trajectoriesTableName + "`");
             statement.executeUpdate("CREATE TABLE `" + trajectoriesTableName + "` ("
                     + "`trajectory_id` INTEGER PRIMARY KEY,"
-                    + "`start_action` varchar(255) NOT NULL DEFAULT 'Unknown',"
-                    + "`end_action` varchar(255) NOT NULL DEFAULT 'Unknown'"
+                    + "`from_action` varchar(255) NOT NULL DEFAULT 'Unknown',"
+                    + "`to_action` varchar(255) NOT NULL DEFAULT 'Unknown'"
                     + ")");
 
             // Set up Points table

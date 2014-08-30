@@ -40,7 +40,7 @@ public class EditModeController extends FrameController {
         dragging = false;
 
         // Look for a point to edit
-        if (activePoint != null) {
+        if (activeTrajectory != null) {
             
             PointEditDialog dialog = new PointEditDialog(activeTrajectory, activePoint, getScene().getWindow());
             dialog.setX(event.getScreenX());
@@ -50,8 +50,8 @@ public class EditModeController extends FrameController {
             if(dialog.result == PointEditDialog.Result.Save) {
                 
                 activeTrajectory.setId(dialog.getTrajectoryId());
-                activeTrajectory.setStartAction(dialog.getStartAction());
-                activeTrajectory.setEndAction(dialog.getEndAction());
+                activeTrajectory.setFromAction(dialog.getFromAction());
+                activeTrajectory.setToAction(dialog.getToAction());
                 activePoint.setActivity(dialog.getActivity());
                 if(dialog.isInteraction()) {
                     // Promote point if needed
@@ -72,7 +72,7 @@ public class EditModeController extends FrameController {
                 }
                 
                 activeTrajectory.set(getCurrentFrame(), activePoint);
-                save(activePoint, activeTrajectory.getId());
+                save(activeTrajectory);
                 repaint();
             }
             else if(dialog.result == PointEditDialog.Result.DeletePoint) {

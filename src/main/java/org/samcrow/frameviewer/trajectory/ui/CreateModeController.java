@@ -127,8 +127,8 @@ public class CreateModeController extends FrameController {
 
         if (dialog.succeeded()) {
             activeTrajectory.setId(dialog.getTrajectoryId());
-            activeTrajectory.setStartAction(dialog.getStartAction());
-            activeTrajectory.setEndAction(dialog.getEndAction());
+            activeTrajectory.setFromAction(dialog.getStartAction());
+            activeTrajectory.setToAction(dialog.getToAction());
             newPoint.setActivity(dialog.getActivity());
 
             activeTrajectory.set(getCurrentFrame(), newPoint);
@@ -168,7 +168,8 @@ public class CreateModeController extends FrameController {
             activeTrajectory.setDataStore(getDataStore());
             getTrajectories().add(activeTrajectory);
             activeTrajectory.setId(dialog.getTrajectoryId());
-            activeTrajectory.setStartAction(dialog.getStartAction());
+            activeTrajectory.setFromAction(dialog.getStartAction());
+            
             getDataStore().add(activeTrajectory);
 
             // Create a new Point at the mouse location

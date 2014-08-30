@@ -24,7 +24,7 @@ public class TrajectoryCreateDialog extends Stage {
     
     protected final IntegerField antIdField = new IntegerField();
     
-    protected final RadioButtonGroup<Trajectory.EndAction> startActionBox = new RadioButtonGroup<>(Trajectory.EndAction.values());
+    protected final RadioButtonGroup<Trajectory.FromAction> startActionBox = new RadioButtonGroup<>(Trajectory.FromAction.values());
     
     protected final RadioButtonGroup<Point.Activity> activityBox = new RadioButtonGroup<>(Point.Activity.values());
     
@@ -44,7 +44,7 @@ public class TrajectoryCreateDialog extends Stage {
         this(parent);
         
         antIdField.setValue(trajectory.getId());
-        startActionBox.setValue(trajectory.getStartAction());
+        startActionBox.setValue(trajectory.getFromAction());
         activityBox.setValue(point.getActivity());
     }
     
@@ -101,7 +101,7 @@ public class TrajectoryCreateDialog extends Stage {
         
         // Set default values
         antIdField.setValue(0);
-        startActionBox.setValue(Trajectory.EndAction.Unknown);
+        startActionBox.setValue(Trajectory.FromAction.Other);
         activityBox.setValue(Point.Activity.NotCarrying);
         
         // Focus on ID field
@@ -138,7 +138,7 @@ public class TrajectoryCreateDialog extends Stage {
         return antIdField.getValue();
     }
     
-    public Trajectory.EndAction getStartAction() {
+    public Trajectory.FromAction getStartAction() {
         return startActionBox.getValue();
     }
     

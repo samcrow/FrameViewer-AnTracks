@@ -19,10 +19,9 @@ import org.samcrow.frameviewer.io3.DatabaseTrajectoryDataStore;
  */
 public class Trajectory implements MultiFrameObject, Iterable<Point> {
 
-    public static enum EndAction {
+    public static enum FromAction {
 
-        Unknown,
-        IntoTunnel,
+        Other,
         OutOfTunnel,
         ;
 
@@ -34,15 +33,37 @@ public class Trajectory implements MultiFrameObject, Iterable<Point> {
          * @param name
          * @return
          */
-        public static EndAction safeValueOf(String name) {
+        public static FromAction safeValueOf(String name) {
             try {
                 return valueOf(name);
             }
             catch (Exception ex) {
-                return Unknown;
+                return Other;
             }
         }
+    }
+    public static enum ToAction {
 
+        Other,
+        IntoTunnel,
+        ;
+
+        /**
+         * Returns the type corresponding to a name, but never
+         * throws an exception. Returns Unknown if a valid value
+         * could not be found.
+         * <p>
+         * @param name
+         * @return
+         */
+        public static ToAction safeValueOf(String name) {
+            try {
+                return valueOf(name);
+            }
+            catch (Exception ex) {
+                return Other;
+            }
+        }
     }
 
     /**
@@ -57,8 +78,8 @@ public class Trajectory implements MultiFrameObject, Iterable<Point> {
 
     private int id;
 
-    private EndAction startAction = EndAction.Unknown;
-    private EndAction endAction = EndAction.Unknown;
+    private FromAction fromAction = FromAction.Other;
+    private ToAction toAction = ToAction.Other;
 
     /**
      * The points in this trajectory.
@@ -180,20 +201,20 @@ public class Trajectory implements MultiFrameObject, Iterable<Point> {
         return new NotNullIterator<>(underlying);
     }
 
-    public EndAction getStartAction() {
-        return startAction;
+    public FromAction getFromAction() {
+        return fromAction;
     }
 
-    public void setStartAction(EndAction startAction) {
-        this.startAction = startAction;
+    public void setFromAction(FromAction startAction) {
+        this.fromAction = startAction;
     }
 
-    public EndAction getEndAction() {
-        return endAction;
+    public ToAction getToAction() {
+        return toAction;
     }
 
-    public void setEndAction(EndAction endAction) {
-        this.endAction = endAction;
+    public void setToAction(ToAction endAction) {
+        this.toAction = endAction;
     }
 
     /**
