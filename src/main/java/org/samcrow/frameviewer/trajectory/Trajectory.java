@@ -23,7 +23,9 @@ public class Trajectory implements MultiFrameObject, Iterable<Point> {
 
         Unknown,
         Ascending,
-        Descending,;
+        Descending,
+        FromAndIntoTunnel,
+        ;
 
         /**
          * Returns the type corresponding to a name, but never
