@@ -4,7 +4,7 @@
 
     <groupId>org.samcrow</groupId>
     <artifactId>TrajectoryCreator</artifactId>
-    <version>2.0.3beta1</version>
+    <version>2.1.0beta1</version>
     <packaging>jar</packaging>
 
     <name>Trajectory Creator</name>
