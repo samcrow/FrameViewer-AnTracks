@@ -48,8 +48,8 @@ public class DataSetSelectionView extends VBox {
         // Sort the list so that it is in order, and <name>_trajectories follows <name>_points for every <name>
         Collections.sort(tableNames);
         
-        final Pattern pointsPattern = Pattern.compile("^([a-zA-Z]\\w*)_points$");
-        final Pattern trajectoriesPattern = Pattern.compile("^([a-zA-Z]\\w*)_trajectories$");
+        final Pattern pointsPattern = Pattern.compile("^([a-zA-Z0-9]\\w*)_points$");
+        final Pattern trajectoriesPattern = Pattern.compile("^([a-zA-Z0-9]\\w*)_trajectories$");
         
         final Iterator<String> iter = tableNames.iterator();
         while(iter.hasNext()) {
