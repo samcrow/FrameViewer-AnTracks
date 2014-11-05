@@ -286,6 +286,9 @@ public class Trajectory implements MultiFrameObject, Iterable<Point> {
             case Interpolated:
                 paintInterpolated(gc, nativeImageWidth, nativeImageHeight, actualImageWidth, actualImageHeight, imageTopLeftX, imageTopLeftY, currentFrame);
                 break;
+            case InterpolatedwithIDs:
+                paintInterpolatedwithIDs(gc, nativeImageWidth, nativeImageHeight, actualImageWidth, actualImageHeight, imageTopLeftX, imageTopLeftY, currentFrame);
+                break;                
             case NearbyPoints:
                 paintNearby(gc, nativeImageWidth, nativeImageHeight, actualImageWidth, actualImageHeight, imageTopLeftX, imageTopLeftY, currentFrame);
                 break;
@@ -341,7 +344,40 @@ public class Trajectory implements MultiFrameObject, Iterable<Point> {
             final Point2D canvasPos = imageToCanvasPosition(new Point2D(x, y), nativeImageWidth, nativeImageHeight, actualImageWidth, actualImageHeight, imageTopLeftX, imageTopLeftY);
 
             new Point(0, 0).paint(gc, canvasPos.getX(), canvasPos.getY(), false);
+        }
+    }
+    
+        private void paintInterpolatedwithIDs(GraphicsContext gc, double nativeImageWidth, double nativeImageHeight, double actualImageWidth, double actualImageHeight, double imageTopLeftX, double imageTopLeftY, int currentFrame) {
 
+        // Do nothing if this frame is not within the range of this trajectory
+        if (currentFrame < firstFrame || currentFrame > lastFrame) {
+            return;
+        }
+
+        // Part 1: See if a point corresponds directly to this frame
+        final Point point = get(currentFrame);
+        if (point != null) {
+            // Just draw this point, hilighted
+            final Point2D pos = imageToCanvasPosition(new Point2D(point.getX(), point.getY()), nativeImageWidth, nativeImageHeight, actualImageWidth, actualImageHeight, imageTopLeftX, imageTopLeftY);
+            point.paint(gc, pos.getX(), pos.getY(), true);
+            point.paintID(gc, pos.getX(), pos.getY(), true);
+        }
+        else {
+            // Draw a non-hilighted point linearly interpolated between the before and after frames
+            Point previousPoint = findPointBefore(currentFrame);
+            Point nextPoint = findPointAfter(currentFrame);
+
+            assert previousPoint != null;
+            assert nextPoint != null;
+
+            final double ratio = (currentFrame - previousPoint.getFrame()) / (double) (nextPoint.getFrame() - previousPoint.getFrame());
+            final double x = nextPoint.getX() * ratio + previousPoint.getX() * (1 - ratio);
+            final double y = nextPoint.getY() * ratio + previousPoint.getY() * (1 - ratio);
+
+            final Point2D canvasPos = imageToCanvasPosition(new Point2D(x, y), nativeImageWidth, nativeImageHeight, actualImageWidth, actualImageHeight, imageTopLeftX, imageTopLeftY);
+
+            new Point(0, 0).paint(gc, canvasPos.getX(), canvasPos.getY(), false);
+            previousPoint.paintID(gc, canvasPos.getX(), canvasPos.getY(), false);
         }
     }
 
