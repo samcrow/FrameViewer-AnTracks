@@ -25,6 +25,11 @@ public class Point extends FrameObject {
     public void setY(int y) {
         this.y = y;
     }
+    
+    // added by Jacob Davidson
+    public void setTrajectoryID(int trajectoryid) {
+        this.trajectoryid = trajectoryid;
+    }
 
     /**
      * @return the activity
@@ -71,11 +76,16 @@ public class Point extends FrameObject {
 
     }
 
+    
+
     private int x;
 
     private int y;
 
     protected Activity activity;
+    
+    // added by Jacob Davidson
+    private int trajectoryid;
 
     public Point(int x, int y) {
         this.x = x;
@@ -93,6 +103,7 @@ public class Point extends FrameObject {
         this.y = other.y;
         this.activity = other.activity;
         this.frame = other.frame;
+        this.trajectoryid = other.trajectoryid;
     }
 
     public int getX() {
@@ -101,6 +112,11 @@ public class Point extends FrameObject {
 
     public int getY() {
         return y;
+    }
+    
+    // added by Jacob Davidson
+    public int getTrajectoryID() {
+        return trajectoryid;
     }
 
     public void paint(GraphicsContext gc, double canvasX, double canvasY, boolean hilighted) {
@@ -113,6 +129,17 @@ public class Point extends FrameObject {
         }
         gc.setLineWidth(2);
         gc.strokeOval(canvasX - RADIUS, canvasY - RADIUS, 2 * RADIUS, 2 * RADIUS);
+    }
+    
+    public void paintID(GraphicsContext gc, double canvasX, double canvasY, boolean hilighted) {
+        if (hilighted) {
+            gc.setStroke(Color.RED);
+        }
+        else {
+            gc.setStroke(Color.LIGHTGREEN);
+        }
+        gc.setLineWidth(1);
+        gc.strokeText(Integer.toString(trajectoryid), canvasX - 10, canvasY + 15);
     }
 
     @Override
@@ -137,6 +164,9 @@ public class Point extends FrameObject {
             return false;
         }
         if (this.y != other.y) {
+            return false;
+        }
+        if (this.trajectoryid != other.trajectoryid) {
             return false;
         }
         return this.activity == other.activity;
