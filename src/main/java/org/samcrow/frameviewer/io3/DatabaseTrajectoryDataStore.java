@@ -73,9 +73,11 @@ public class DatabaseTrajectoryDataStore extends MultiFrameDataStore<Trajectory>
                             final Point existingPoint = existingTrajectory.get(frame);
                             if (existingPoint != null) {
                                 // Update this point
-                                existingPoint.setActivity(Point.Activity.valueOf(points.getString("activity")));
+                                existingPoint.setActivity(Point.Activity.safeValueOf(points.getString("activity")));
                                 existingPoint.setX(points.getInt("frame_x"));
                                 existingPoint.setY(points.getInt("frame_y"));
+                                // added by Jacob
+                                existingPoint.setTrajectoryID(points.getInt("trajectory_id"));
 
                                 if (existingPoint instanceof InteractionPoint) {
                                     final InteractionPoint iPoint = (InteractionPoint) existingPoint;
@@ -83,8 +85,8 @@ public class DatabaseTrajectoryDataStore extends MultiFrameDataStore<Trajectory>
                                     // Check if the point should be preserved as an interaction point
                                     if (points.getBoolean("is_interaction")) {
 
-                                        iPoint.setType(InteractionType.valueOf(points.getString("interaction_type")));
-                                        iPoint.setMetAntActivity(Point.Activity.valueOf(points.getString("interaction_met_ant_activity")));
+                                        iPoint.setType(InteractionType.safeValueOf(points.getString("interaction_type")));
+                                        iPoint.setMetAntActivity(Point.Activity.safeValueOf(points.getString("interaction_met_ant_activity")));
                                         iPoint.setMetAntId(points.getInt("interaction_met_trajectory_id"));
                                     }
                                     else {
@@ -97,8 +99,8 @@ public class DatabaseTrajectoryDataStore extends MultiFrameDataStore<Trajectory>
                                     if (points.getBoolean("is_interaction")) {
                                         // Promote
                                         final InteractionPoint iPoint = new InteractionPoint(existingPoint);
-                                        iPoint.setType(InteractionType.valueOf(points.getString("interaction_type")));
-                                        iPoint.setMetAntActivity(Point.Activity.valueOf(points.getString("interaction_met_ant_activity")));
+                                        iPoint.setType(InteractionType.safeValueOf(points.getString("interaction_type")));
+                                        iPoint.setMetAntActivity(Point.Activity.safeValueOf(points.getString("interaction_met_ant_activity")));
                                         iPoint.setMetAntId(points.getInt("interaction_met_trajectory_id"));
                                         // Put the promoted point into the trajectory
                                         existingTrajectory.set(frame, iPoint);
@@ -430,6 +432,7 @@ public class DatabaseTrajectoryDataStore extends MultiFrameDataStore<Trajectory>
         // Set common attributes
         point.setFrame(result.getInt("frame_number"));
         point.setActivity(Point.Activity.safeValueOf(result.getString("activity")));
+        point.setTrajectoryID(result.getInt("trajectory_id"));
 
         return point;
     }
