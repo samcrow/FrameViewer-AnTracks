@@ -4,18 +4,16 @@
  */
 package org.samcrow.frameviewer.ui;
 
-import javafx.beans.property.IntegerProperty;
 import junit.framework.TestCase;
-
-import static junit.framework.Assert.assertEquals;
+import org.samcrow.frameviewer.util.TimeFormatter;
 
 /**
  *
  * @author samcrow
  */
-public class TimeFieldTest extends TestCase {
+public class TimeFormatterTest extends TestCase {
     
-    public TimeFieldTest(String testName) {
+    public TimeFormatterTest(String testName) {
         super(testName);
     }
     
@@ -34,7 +32,7 @@ public class TimeFieldTest extends TestCase {
         System.out.println("parseDuration");
         String time = "00:05";
         int expResult = 5;
-        int result = TimeField.parseDuration(time);
+        int result = TimeFormatter.parseDuration(time);
         assertEquals(expResult, result);
         
     }
@@ -44,7 +42,7 @@ public class TimeFieldTest extends TestCase {
         System.out.println("parseDuration");
         String time = "01:05";
         int expResult = 65;
-        int result = TimeField.parseDuration(time);
+        int result = TimeFormatter.parseDuration(time);
         assertEquals(expResult, result);
         
     }

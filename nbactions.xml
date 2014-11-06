@@ -27,14 +27,14 @@
             <actionName>CUSTOM-JavaFX JAR</actionName>
             <displayName>JavaFX JAR</displayName>
             <goals>
-                <goal>com.zenjava:javafx-maven-plugin:2.0:jar</goal>
+                <goal>com.zenjava:javafx-maven-plugin:8.1.2:jar</goal>
             </goals>
         </action>
         <action>
             <actionName>CUSTOM-JavaFX build native application</actionName>
             <displayName>JavaFX build native application</displayName>
             <goals>
-                <goal>com.zenjava:javafx-maven-plugin:2.0:native</goal>
+                <goal>com.zenjava:javafx-maven-plugin:8.1.2:native</goal>
             </goals>
         </action>
         <action>
