@@ -203,7 +203,7 @@ public class DatabaseTrajectoryDataStore extends MultiFrameDataStore<Trajectory>
     }
 
     private ResultSet selectPointsInTrajectory(int trajectoryId) throws SQLException {
-        return connection.createStatement().executeQuery("SELECT * FROM `" + pointsTableName + "` WHERE `trajectory_id`=" + trajectoryId + " ORDER BY `frame_number`");
+        return connection.createStatement().executeQuery("SELECT * FROM `" + pointsTableName + "` WHERE `trajectory_id`=" + trajectoryId + " ORDER BY `frame_number`,`is_interaction`");
     }
 
     /**
