@@ -23,11 +23,13 @@ public class Trajectory implements MultiFrameObject, Iterable<Point> {
 
         Other,
         OutOfTunnel,
+        FromOutside,
+        InEntranceChamber
         ;
 
         /**
          * Returns the type corresponding to a name, but never
-         * throws an exception. Returns Unknown if a valid value
+         * throws an exception. Returns Other if a valid value
          * could not be found.
          * <p>
          * @param name
@@ -46,6 +48,8 @@ public class Trajectory implements MultiFrameObject, Iterable<Point> {
 
         Other,
         IntoTunnel,
+        ToOutside,
+        InEntranceChamber
         ;
 
         /**
