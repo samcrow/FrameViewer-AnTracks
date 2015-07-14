@@ -2,6 +2,8 @@ package org.samcrow.frameviewer.trajectory;
 
 import java.util.Iterator;
 import junit.framework.TestCase;
+import org.samcrow.frameviewer.trajectory.Point.Source;
+import org.samcrow.frameviewer.trajectory.Trajectory.Entry;
 
 /**
  *
@@ -24,13 +26,13 @@ public class TrajectoryTest extends TestCase {
     }
     
     public void testSetGet() {
-        Trajectory t = new Trajectory(0, 1);
+        Trajectory0 t = new Trajectory0(null);
         
-        final Point point1 = new Point(1, 2);
-        final Point point2 = new Point(3, 4);
+        final Point0 point1 = new Point0(1, 2, Point.Source.User);
+        final Point0 point2 = new Point0(3, 4, Point.Source.User);
         
-        t.set(0, point1);
-        t.set(1, point2);
+        t.put(0, point1);
+        t.put(1, point2);
         
         assertEquals(t.get(0), point1);
         assertEquals(t.get(1), point2);
@@ -39,19 +41,19 @@ public class TrajectoryTest extends TestCase {
     
     public void testIterator() {
         
-        Trajectory t = new Trajectory(100, 200);
+        Trajectory0 t = new Trajectory0(null);
         
-        final Point point1 = new Point(3, 9);
-        final Point point2 = new Point(53, 90);
+        final Point0 point1 = new Point0(3, 9, Point.Source.User);
+        final Point0 point2 = new Point0(53, 90, Point.Source.User);
         
-        t.set(120, point1);
-        t.set(200, point2);
+        t.put(120, point1);
+        t.put(200, point2);
         
-        Iterator<Point> iter = t.iterator();
+        Iterator<Entry<Point0>> iter = t.iterator();
         assertTrue(iter.hasNext());
-        assertEquals(iter.next(), point1);
+        assertEquals(iter.next().point, point1);
         assertTrue(iter.hasNext());
-        assertEquals(iter.next(), point2);
+        assertEquals(iter.next().point, point2);
         
         assertFalse(iter.hasNext());
         
@@ -59,46 +61,46 @@ public class TrajectoryTest extends TestCase {
     
     public void testAppend() {
         
-        Trajectory t1 = new Trajectory(1, 5);
-        t1.set(1, new Point(1, 1));
-        t1.set(2, new Point(1, 2));
-        t1.set(3, new Point(1, 3));
-        t1.set(4, new Point(1, 4));
-        t1.set(5, new Point(1, 5));
+        Trajectory0 t1 = new Trajectory0(null);
+        t1.put(1, new Point0(1, 1, Source.User));
+        t1.put(2, new Point0(1, 2, Source.User));
+        t1.put(3, new Point0(1, 3, Source.User));
+        t1.put(4, new Point0(1, 4, Source.User));
+        t1.put(5, new Point0(1, 5, Source.User));
         
-        Trajectory t2 = new Trajectory(5, 10);
-        t2.set(5, new Point(2, 5));
-        t2.set(6, new Point(2, 6));
-        t2.set(7, new Point(2, 7));
-        t2.set(8, new Point(2, 8));
-        t2.set(9, new Point(2, 9));
-        t2.set(10, new Point(2, 10));
+        Trajectory0 t2 = new Trajectory0(null);
+        t2.put(5, new Point0(2, 5, Source.User));
+        t2.put(6, new Point0(2, 6, Source.User));
+        t2.put(7, new Point0(2, 7, Source.User));
+        t2.put(8, new Point0(2, 8, Source.User));
+        t2.put(9, new Point0(2, 9, Source.User));
+        t2.put(10, new Point0(2, 10, Source.User));
         
-        t1.append(t2);
+        t1.putAll(t2);
         
-        Iterator<Point> iter = t1.iterator();
-        
-        assertTrue(iter.hasNext());
-        assertEquals(iter.next(), new Point(1, 1));
-        assertTrue(iter.hasNext());
-        assertEquals(iter.next(), new Point(1, 2));
-        assertTrue(iter.hasNext());
-        assertEquals(iter.next(), new Point(1, 3));
-        assertTrue(iter.hasNext());
-        assertEquals(iter.next(), new Point(1, 4));
+        Iterator<Entry<Point0>> iter = t1.iterator();
         
         assertTrue(iter.hasNext());
-        assertEquals(iter.next(), new Point(2, 5));
+        assertEquals(iter.next().point, new Point0(1, 1, Source.User));
         assertTrue(iter.hasNext());
-        assertEquals(iter.next(), new Point(2, 6));
+        assertEquals(iter.next().point, new Point0(1, 2, Source.User));
         assertTrue(iter.hasNext());
-        assertEquals(iter.next(), new Point(2, 7));
+        assertEquals(iter.next().point, new Point0(1, 3, Source.User));
         assertTrue(iter.hasNext());
-        assertEquals(iter.next(), new Point(2, 8));
+        assertEquals(iter.next().point, new Point0(1, 4, Source.User));
+        
         assertTrue(iter.hasNext());
-        assertEquals(iter.next(), new Point(2, 9));
+        assertEquals(iter.next().point, new Point0(2, 5, Source.User));
         assertTrue(iter.hasNext());
-        assertEquals(iter.next(), new Point(2, 10));
+        assertEquals(iter.next().point, new Point0(2, 6, Source.User));
+        assertTrue(iter.hasNext());
+        assertEquals(iter.next().point, new Point0(2, 7, Source.User));
+        assertTrue(iter.hasNext());
+        assertEquals(iter.next().point, new Point0(2, 8, Source.User));
+        assertTrue(iter.hasNext());
+        assertEquals(iter.next().point, new Point0(2, 9, Source.User));
+        assertTrue(iter.hasNext());
+        assertEquals(iter.next().point, new Point0(2, 10, Source.User));
         
         assertFalse(iter.hasNext());
     }

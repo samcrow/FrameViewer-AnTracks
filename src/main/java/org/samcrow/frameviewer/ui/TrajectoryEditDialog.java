@@ -5,8 +5,8 @@ import javafx.event.EventHandler;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.stage.Window;
-import org.samcrow.frameviewer.trajectory.Point;
-import org.samcrow.frameviewer.trajectory.Trajectory;
+import org.samcrow.frameviewer.trajectory.Point0;
+import org.samcrow.frameviewer.trajectory.Trajectory0;
 
 /**
  * A Trajectory dialog that allows the user to
@@ -17,9 +17,9 @@ public class TrajectoryEditDialog extends TrajectoryCreateDialog {
     
     private boolean finalizeRequested = false;
     
-    private final RadioButtonGroup<Trajectory.ToAction> toAction = new RadioButtonGroup<>(Trajectory.ToAction.values());
+    private final RadioButtonGroup<Trajectory0.ToAction> toAction = new RadioButtonGroup<>(Trajectory0.ToAction.values());
 
-    public TrajectoryEditDialog(Window parent, Trajectory trajectory, Point point) {
+    public TrajectoryEditDialog(Window parent, Trajectory0 trajectory, Point0 point) {
         super(parent, trajectory, point);
         addEndActionBox(trajectory.getToAction());
         addFinalizeButtion();
@@ -30,7 +30,7 @@ public class TrajectoryEditDialog extends TrajectoryCreateDialog {
         addFinalizeButtion();
     }
     
-    private void addEndActionBox(Trajectory.ToAction initialValue) {
+    private void addEndActionBox(Trajectory0.ToAction initialValue) {
         toAction.setValue(initialValue);
         addNode(new Label("Trajectory end action"));
         addNode(toAction);
@@ -55,7 +55,7 @@ public class TrajectoryEditDialog extends TrajectoryCreateDialog {
         return finalizeRequested;
     }
     
-    public Trajectory.ToAction getToAction() {
+    public Trajectory0.ToAction getToAction() {
         return toAction.getValue();
     }
 }

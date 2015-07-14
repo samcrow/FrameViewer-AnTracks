@@ -2,8 +2,6 @@ package org.samcrow.frameviewer;
 
 import java.util.LinkedHashMap;
 import java.util.Map.Entry;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  * A map with a configurable maximum capacity that removes old items when this
@@ -67,12 +65,6 @@ public class CachingMap <K, V> extends LinkedHashMap <K, V> {
     @Override
     protected boolean removeEldestEntry(Entry<K, V> eldest) {
         boolean remove = size() > capacity;
-        if(remove) {
-            Logger.getLogger(CachingMap.class.getName()).log(Level.INFO, "Removing cache entry with key {0}", eldest.getKey());
-        }
         return remove;
     }
-    
-    
-    
 }

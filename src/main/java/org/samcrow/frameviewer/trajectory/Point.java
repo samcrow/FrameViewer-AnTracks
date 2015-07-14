@@ -1,148 +1,102 @@
 package org.samcrow.frameviewer.trajectory;
 
-import java.util.Objects;
-import javafx.scene.canvas.GraphicsContext;
-import javafx.scene.paint.Color;
-import org.samcrow.frameviewer.FrameObject;
-
 /**
- * A point in a trajectory
- * <p>
+ * A point in a video frame.
+ *
+ * Coordinates are in pixels from the upper left corner of the frame, in the
+ * native resolution of the frame.
+ *
  * @author Sam Crow
  */
-public class Point extends FrameObject {
-
+public class Point {
+    
     /**
-     * @param x the x to set
+     * Sources that can create points
      */
-    public void setX(int x) {
-        this.x = x;
+    public enum Source {
+	/**
+	 * The point was entered by the user
+	 */
+	User,
+	/**
+	 * The point was interpolated between adjacent points, without using
+	 * image-based tracking
+	 */
+	Interpolation,
+	/**
+	 * The point was calculated using image-based tracking
+	 */
+	Tracking,
     }
 
     /**
-     * @param y the y to set
+     * The X location
      */
-    public void setY(int y) {
-        this.y = y;
-    }
-
+    protected int x;
     /**
-     * @return the activity
+     * The Y location
      */
-    public Activity getActivity() {
-        return activity;
-    }
+    protected int y;
 
     /**
-     * @param activity the activity to set
+     * The source that created this point
      */
-    public void setActivity(Activity activity) {
-        if (activity != null) {
-            this.activity = activity;
-        }
-        else {
-            // Ensure not null
-            this.activity = Activity.NotCarrying;
-        }
-    }
-
-    public static enum Activity {
-
-        NotCarrying,
-        CarryingFood,
-        CarryingSomethingElse,;
-
-        /**
-         * Returns the type corresponding to a name, but never
-         * throws an exception. Returns NotCarrying if a valid value
-         * could not be found.
-         * <p>
-         * @param name
-         * @return
-         */
-        public static Activity safeValueOf(String name) {
-            try {
-                return valueOf(name);
-            }
-            catch (Exception ex) {
-                return NotCarrying;
-            }
-        }
-
-    }
-
-    private int x;
-
-    private int y;
-
-    protected Activity activity;
-
-    public Point(int x, int y) {
-        this.x = x;
-        this.y = y;
-    }
-
+    private Source source;
+    
     /**
-     * Constructs a copy of another point
-     * <p>
-     * @param other
+     * Creates a new point
+     *
+     * @param x the X location
+     * @param y the Y location
+     * @param source the source that created this point
+     */
+    public Point(int x, int y, Source source) {
+	this.x = x;
+	this.y = y;
+	this.source = source;
+    }
+    
+    /**
+     * Creates a new Point as a copy of another
+     * @param other the point to copy from
      */
     public Point(Point other) {
-        super(other);
-        this.x = other.x;
-        this.y = other.y;
-        this.activity = other.activity;
-        this.frame = other.frame;
+	this.x = other.x;
+	this.y = other.y;
+	this.source = other.source;
     }
 
+    /**
+     *
+     * @return The X location of this point
+     */
     public int getX() {
-        return x;
+	return x;
     }
 
+    /**
+     *
+     * @return the Y location of this point
+     */
     public int getY() {
-        return y;
+	return y;
     }
 
-    public void paint(GraphicsContext gc, double canvasX, double canvasY, boolean hilighted) {
-        final int RADIUS = 3;
-        if (hilighted) {
-            gc.setStroke(Color.RED);
-        }
-        else {
-            gc.setStroke(Color.LIGHTGREEN);
-        }
-        gc.setLineWidth(2);
-        gc.strokeOval(canvasX - RADIUS, canvasY - RADIUS, 2 * RADIUS, 2 * RADIUS);
+    /**
+     * 
+     * @return the source of this point
+     */
+    public Source getSource() {
+	return source;
     }
 
-    @Override
-    public int hashCode() {
-        int hash = 7;
-        hash = 13 * hash + this.x;
-        hash = 13 * hash + this.y;
-        hash = 13 * hash + Objects.hashCode(this.activity);
-        return hash;
+    public void setSource(Source source) {
+	this.source = source;
     }
 
     @Override
-    public boolean equals(Object obj) {
-        if (obj == null) {
-            return false;
-        }
-        if (getClass() != obj.getClass()) {
-            return false;
-        }
-        final Point other = (Point) obj;
-        if (this.x != other.x) {
-            return false;
-        }
-        if (this.y != other.y) {
-            return false;
-        }
-        return this.activity == other.activity;
+    public String toString() {
+	return "Point{" + "x=" + x + ", y=" + y + ", source=" + source + '}';
     }
     
-    
-    
-
 }

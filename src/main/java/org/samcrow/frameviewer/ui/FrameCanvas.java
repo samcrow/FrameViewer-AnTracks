@@ -19,7 +19,8 @@ import javafx.scene.image.Image;
 import javafx.scene.input.MouseEvent;
 import org.samcrow.frameviewer.PaintableCanvas;
 import org.samcrow.frameviewer.io3.DatabaseTrajectoryDataStore;
-import org.samcrow.frameviewer.trajectory.Trajectory;
+import org.samcrow.frameviewer.track.Tracker;
+import org.samcrow.frameviewer.trajectory.Trajectory0;
 import org.samcrow.frameviewer.trajectory.TrajectoryDisplayMode;
 import org.samcrow.frameviewer.trajectory.TrajectoryTool;
 import org.samcrow.frameviewer.trajectory.ui.CreateModeController;
@@ -42,7 +43,7 @@ public class FrameCanvas extends PaintableCanvas {
     
     private final ObjectProperty<TrajectoryTool> tool = new SimpleObjectProperty<>();
 
-    private final ObjectProperty<List<Trajectory>> trajectories = createTrajectoriesProperty();
+    private final ObjectProperty<List<Trajectory0>> trajectories = createTrajectoriesProperty();
 
     /**
      * Local coordinate X position of the frame's top left corner
@@ -74,9 +75,15 @@ public class FrameCanvas extends PaintableCanvas {
     private final EditModeController editController;
     
     private FrameController activeController;
+    
+    /**
+     * The tracker used for tracking
+     */
+    private final Tracker tracker;
 
 
-    public FrameCanvas() {
+    public FrameCanvas(Tracker tracker) {
+	this.tracker = tracker;
 
         setFocusTraversable(true);
         requestFocus();
@@ -139,12 +146,12 @@ public class FrameCanvas extends PaintableCanvas {
         });
         
         // Set up controllers
-        createController = new CreateModeController(this);
+        createController = new CreateModeController(this, tracker);
         createController.currentFrameProperty().bind(currentFrameProperty());
         createController.trajectoriesProperty().bind(trajectories);
         createController.sceneProperty().bind(sceneProperty());
         
-        editController = new EditModeController(this);
+        editController = new EditModeController(this, tracker);
         editController.currentFrameProperty().bind(currentFrameProperty());
         editController.trajectoriesProperty().bind(trajectories);
         editController.sceneProperty().bind(sceneProperty());
@@ -164,6 +171,18 @@ public class FrameCanvas extends PaintableCanvas {
                 }
             }
         });
+	
+	// Set tracker on trajectories when new trajectories arrive
+	trajectories.addListener(new ChangeListener<List<Trajectory0>>() {
+	    @Override
+	    public void changed(
+		    ObservableValue<? extends List<Trajectory0>> observable,
+		    List<Trajectory0> oldValue, List<Trajectory0> newValue) {
+		for(Trajectory0 trajectory : newValue) {
+		    trajectory.setTracker(FrameCanvas.this.tracker);
+		}
+	    }
+	});
     }
 
     @Override
@@ -211,7 +230,7 @@ public class FrameCanvas extends PaintableCanvas {
                 gc.setGlobalAlpha(trajectoryAlpha.get());
 
                 // Draw trajectories
-                for (Trajectory trajectory : trajectories.get()) {
+                for (Trajectory0 trajectory : trajectories.get()) {
                     trajectory.paint(gc, image.get().getWidth(), image.get().getHeight(), imageWidth, imageHeight, imageTopLeftX, imageTopLeftY, getCurrentFrame(), getDisplayMode());
                 }
 
@@ -282,7 +301,7 @@ public class FrameCanvas extends PaintableCanvas {
         return image;
     }
 
-    public void setTrajectories(List<Trajectory> trajectories) {
+    public void setTrajectories(List<Trajectory0> trajectories) {
         if (trajectories == null) {
             throw new IllegalArgumentException("The trajectory list must not be null");
         }
@@ -337,8 +356,8 @@ public class FrameCanvas extends PaintableCanvas {
         return trajectoryAlpha;
     }
     
-    private static ObjectProperty<List<Trajectory>> createTrajectoriesProperty() {
-        final List<Trajectory> initialList = new ArrayList<>();
+    private static ObjectProperty<List<Trajectory0>> createTrajectoriesProperty() {
+        final List<Trajectory0> initialList = new ArrayList<>();
         return new SimpleObjectProperty<>(initialList);
     }
 }

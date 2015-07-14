@@ -70,6 +70,7 @@ public class FrameFinder {
      * and returns it
      * @param frameNumber The 1-based frame index to get
      * @return An image for the frame
+     * @throws FrameIndexOutOfBoundsException if the frame number is out of range
      */
     public Image getImage(int frameNumber) {
         if(frameNumber < getFirstFrame() || frameNumber > getMaximumFrame()) {

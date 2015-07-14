@@ -9,7 +9,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javafx.application.Application;
 import javafx.event.ActionEvent;
-import javafx.event.EventHandler;
 import javafx.scene.Scene;
 import javafx.scene.control.Menu;
 import javafx.scene.control.MenuBar;
@@ -22,7 +21,9 @@ import javafx.stage.Stage;
 import jfxtras.labs.dialogs.MonologFX;
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.samcrow.frameviewer.io3.DatabaseTrajectoryDataStore;
+import org.samcrow.frameviewer.track.Tracker;
 import org.samcrow.frameviewer.ui.db.DatabaseConnectionDialog;
+import org.samcrow.tracking.TemplateTracker;
 
 /**
  * Hello world!
@@ -73,7 +74,8 @@ public class App extends Application {
             FrameFinder finder = new FrameFinder(frameDir);
             model = new DataStoringPlaybackControlModel(finder, trajectoryDataStore);
 
-            FrameCanvas canvas = new FrameCanvas();
+	    Tracker tracker = new Tracker(finder, new TemplateTracker.Config(20, 20));
+            FrameCanvas canvas = new FrameCanvas(tracker);
             canvas.imageProperty().bind(model.currentFrameImageProperty());
             canvas.setDataStore(trajectoryDataStore);
             model.bindMarkers(canvas);
@@ -89,17 +91,14 @@ public class App extends Application {
             // Hook up trajectory tool select
             canvas.trajectoryToolProperty().bindBidirectional(controls.trajectoryToolProperty());
             // Hook up refresh action
-            controls.setOnRefreshRequested(new EventHandler<ActionEvent>() {
-                @Override
-                public void handle(ActionEvent t) {
-                    try {
-                        trajectoryDataStore.refresh();
-                    }
-                    catch (IOException ex) {
-                        showDialog(ex);
-                    }
-                }
-            });
+            controls.setOnRefreshRequested((ActionEvent t) -> {
+		try {
+		    trajectoryDataStore.refresh();
+		}
+		catch (IOException ex) {
+		    showDialog(ex);
+		}
+	    });
 
             //Assemble the root StackPane
             StackPane root = new StackPane();
@@ -135,12 +134,9 @@ public class App extends Application {
 
         final MenuItem openItem = new MenuItem("Open...");
         openItem.setAccelerator(KeyCombination.keyCombination("Shortcut+O"));
-        openItem.setOnAction(new EventHandler<ActionEvent>() {
-            @Override
-            public void handle(ActionEvent t) {
-                // TODO
-            }
-        });
+        openItem.setOnAction((ActionEvent t) -> {
+	    // TODO
+	});
 
         fileMenu.getItems().add(openItem);
 

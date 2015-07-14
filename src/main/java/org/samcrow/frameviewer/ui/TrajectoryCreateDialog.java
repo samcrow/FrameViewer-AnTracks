@@ -13,8 +13,8 @@ import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 import javafx.stage.Window;
-import org.samcrow.frameviewer.trajectory.Point;
-import org.samcrow.frameviewer.trajectory.Trajectory;
+import org.samcrow.frameviewer.trajectory.Point0;
+import org.samcrow.frameviewer.trajectory.Trajectory0;
 
 /**
  * A dialog that allows the user to set the properties of a 
@@ -24,9 +24,9 @@ public class TrajectoryCreateDialog extends Stage {
     
     protected final IntegerField antIdField = new IntegerField();
     
-    protected final RadioButtonGroup<Trajectory.FromAction> startActionBox = new RadioButtonGroup<>(Trajectory.FromAction.values());
+    protected final RadioButtonGroup<Trajectory0.FromAction> startActionBox = new RadioButtonGroup<>(Trajectory0.FromAction.values());
     
-    protected final RadioButtonGroup<Point.Activity> activityBox = new RadioButtonGroup<>(Point.Activity.values());
+    protected final RadioButtonGroup<Point0.Activity> activityBox = new RadioButtonGroup<>(Point0.Activity.values());
     
     private final VBox root = new VBox();
 
@@ -40,7 +40,7 @@ public class TrajectoryCreateDialog extends Stage {
      * @param trajectory
      * @param point 
      */
-    public TrajectoryCreateDialog(Window parent, Trajectory trajectory, Point point) {
+    public TrajectoryCreateDialog(Window parent, Trajectory0 trajectory, Point0 point) {
         this(parent);
         
         antIdField.setValue(trajectory.getId());
@@ -101,8 +101,8 @@ public class TrajectoryCreateDialog extends Stage {
         
         // Set default values
         antIdField.setValue(0);
-        startActionBox.setValue(Trajectory.FromAction.Other);
-        activityBox.setValue(Point.Activity.NotCarrying);
+        startActionBox.setValue(Trajectory0.FromAction.Other);
+        activityBox.setValue(Point0.Activity.NotCarrying);
         
         // Focus on ID field
         antIdField.requestFocus();
@@ -138,11 +138,11 @@ public class TrajectoryCreateDialog extends Stage {
         return antIdField.getValue();
     }
     
-    public Trajectory.FromAction getStartAction() {
+    public Trajectory0.FromAction getStartAction() {
         return startActionBox.getValue();
     }
     
-    public Point.Activity getActivity() {
+    public Point0.Activity getActivity() {
         return activityBox.getValue();
     }
 }

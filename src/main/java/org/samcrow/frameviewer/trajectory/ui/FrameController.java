@@ -16,8 +16,10 @@ import jfxtras.labs.dialogs.MonologFX;
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.samcrow.frameviewer.PaintableCanvas;
 import org.samcrow.frameviewer.io3.DatabaseTrajectoryDataStore;
-import org.samcrow.frameviewer.trajectory.Point;
-import org.samcrow.frameviewer.trajectory.Trajectory;
+import org.samcrow.frameviewer.track.Tracker;
+import org.samcrow.frameviewer.trajectory.Point0;
+import org.samcrow.frameviewer.trajectory.TrackingTrajectory;
+import org.samcrow.frameviewer.trajectory.Trajectory0;
 
 /**
  * Manages user interactions with the currently displayed frame
@@ -26,18 +28,21 @@ import org.samcrow.frameviewer.trajectory.Trajectory;
  */
 public class FrameController {
 
-    private ObjectProperty<Scene> scene = new SimpleObjectProperty<>();
+    private final ObjectProperty<Scene> scene = new SimpleObjectProperty<>();
 
     private final PaintableCanvas canvas;
 
-    private final ObjectProperty<List<Trajectory>> trajectories = createTrajectoriesProperty();
+    private final ObjectProperty<List<Trajectory0>> trajectories = createTrajectoriesProperty();
 
     private final IntegerProperty frame = new SimpleIntegerProperty();
 
     private final ObjectProperty<DatabaseTrajectoryDataStore> dataStore = new SimpleObjectProperty<>();
+    
+    private final Tracker tracker;
 
-    public FrameController(PaintableCanvas canvas) {
+    public FrameController(PaintableCanvas canvas, Tracker tracker) {
         this.canvas = canvas;
+	this.tracker = tracker;
     }
 
     /**
@@ -86,15 +91,15 @@ public class FrameController {
         
     }
 
-    public final List<Trajectory> getTrajectories() {
+    public final List<Trajectory0> getTrajectories() {
         return trajectories.get();
     }
 
-    public final void setTrajectories(List<Trajectory> trajectories) {
+    public final void setTrajectories(List<Trajectory0> trajectories) {
         this.trajectories.set(trajectories);
     }
     
-    public final ObjectProperty<List<Trajectory>> trajectoriesProperty() {
+    public final ObjectProperty<List<Trajectory0>> trajectoriesProperty() {
         return trajectories;
     }
 
@@ -105,10 +110,10 @@ public class FrameController {
      * @param framePosition
      * @return
      */
-    protected final Trajectory getTrajectoryNear(Point2D framePosition) {
-        for (Trajectory trajectory : getTrajectories()) {
+    protected final Trajectory0 getTrajectoryNear(Point2D framePosition) {
+        for (Trajectory0 trajectory : getTrajectories()) {
             try {
-                final Point point = trajectory.get(getCurrentFrame());
+                final Point0 point = trajectory.get(getCurrentFrame());
                 if (point != null) {
                     // Find distance
                     final double MAX_RADIUS = 6;
@@ -140,8 +145,8 @@ public class FrameController {
      * @param framePosition
      * @return
      */
-    protected final Point getPointNear(Point2D framePosition) {
-        final Trajectory trajectory = getTrajectoryNear(framePosition);
+    protected final Point0 getPointNear(Point2D framePosition) {
+        final Trajectory0 trajectory = getTrajectoryNear(framePosition);
         if (trajectory != null) {
             try {
                 return trajectory.get(getCurrentFrame());
@@ -187,7 +192,7 @@ public class FrameController {
         return scene;
     }
 
-    protected final void save(Trajectory trajectory) {
+    protected final void save(Trajectory0 trajectory) {
         try {
             getDataStore().persistTrajectory(trajectory);
         }
@@ -200,9 +205,9 @@ public class FrameController {
         }
     }
 
-    protected final void save(Point point, int trajectoryId) {
+    protected final void save(Point0 point, int trajectoryId) {
         try {
-            getDataStore().persistPoint(point, trajectoryId);
+            getDataStore().persistPoint(point, getCurrentFrame(), trajectoryId);
         }
         catch (SQLException ex) {
             MonologFX dialog = new MonologFX(MonologFX.Type.ERROR);
@@ -213,7 +218,7 @@ public class FrameController {
         }
     }
     
-    protected final void delete(Trajectory trajectory) {
+    protected final void delete(Trajectory0 trajectory) {
         try {
             getDataStore().deleteTrajectory(trajectory);
         }
@@ -226,9 +231,9 @@ public class FrameController {
         }
     }
     
-    protected final void delete(Point point, int trajectoryId) {
+    protected final void delete(Point0 point, int frame, int trajectoryId) {
         try {
-            getDataStore().deletePoint(trajectoryId, point.getFrame());
+            getDataStore().deletePoint(trajectoryId, frame);
         }
         catch (SQLException ex) {
             MonologFX dialog = new MonologFX(MonologFX.Type.ERROR);
@@ -243,9 +248,14 @@ public class FrameController {
         canvas.repaint();
     }
 
-    private static ObjectProperty<List<Trajectory>> createTrajectoriesProperty() {
-        final List<Trajectory> initialList = new ArrayList<>();
+    private static ObjectProperty<List<Trajectory0>> createTrajectoriesProperty() {
+        final List<Trajectory0> initialList = new ArrayList<>();
         return new SimpleObjectProperty<>(initialList);
     }
+
+    public Tracker getTracker() {
+	return tracker;
+    }
+    
 
 }

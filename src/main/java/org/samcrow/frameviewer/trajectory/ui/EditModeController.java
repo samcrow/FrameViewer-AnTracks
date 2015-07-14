@@ -3,9 +3,10 @@ package org.samcrow.frameviewer.trajectory.ui;
 import javafx.geometry.Point2D;
 import javafx.scene.input.MouseEvent;
 import org.samcrow.frameviewer.PaintableCanvas;
+import org.samcrow.frameviewer.track.Tracker;
 import org.samcrow.frameviewer.trajectory.InteractionPoint;
-import org.samcrow.frameviewer.trajectory.Point;
-import org.samcrow.frameviewer.trajectory.Trajectory;
+import org.samcrow.frameviewer.trajectory.Point0;
+import org.samcrow.frameviewer.trajectory.Trajectory0;
 
 /**
  * Controller for edit mode
@@ -14,14 +15,14 @@ import org.samcrow.frameviewer.trajectory.Trajectory;
  */
 public class EditModeController extends FrameController {
 
-    private Trajectory activeTrajectory;
+    private Trajectory0 activeTrajectory;
 
     private boolean dragging = false;
 
-    private Point activePoint;
+    private Point0 activePoint;
 
-    public EditModeController(PaintableCanvas canvas) {
-        super(canvas);
+    public EditModeController(PaintableCanvas canvas, Tracker tracker) {
+        super(canvas, tracker);
     }
 
     @Override
@@ -67,17 +68,17 @@ public class EditModeController extends FrameController {
                 else {
                     // Demote point if needed
                     if(activePoint instanceof InteractionPoint) {
-                        activePoint = new Point(activePoint);
+                        activePoint = new Point0(activePoint);
                     }
                 }
                 
-                activeTrajectory.set(getCurrentFrame(), activePoint);
+                activeTrajectory.put(getCurrentFrame(), activePoint);
                 save(activeTrajectory);
                 repaint();
             }
             else if(dialog.result == PointEditDialog.Result.DeletePoint) {
-                delete(activePoint, activeTrajectory.getId());
-                activeTrajectory.set(getCurrentFrame(), null);
+                delete(activePoint, getCurrentFrame(), activeTrajectory.getId());
+                activeTrajectory.put(getCurrentFrame(), null);
                 repaint();
             }
             else if(dialog.result == PointEditDialog.Result.DeleteTrajectory) {

@@ -1,0 +1,21 @@
+Changes in fork:
+Display ant IDs
+
+Requests:
+Display trajectories:
+See a single trajectory, with all its points and interactions displayed
+Click on a point -> jump to the frame where that point was recorded
+Show the interpolated points and ant IDs for the other trajectories
+
+(List view to show the trajectories)
+
+Bug fix: Multiple points in one frame: interactions not displayed correctly
+    Quick fix in fork, could merge it
+Can create this situation in edit mode
+
+Bug fix: When a point is created or modified, ensure its trajectory ID
+is updated
+
+See Google Documents document
+
+Next video:

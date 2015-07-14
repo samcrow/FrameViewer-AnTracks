@@ -9,7 +9,7 @@ import javafx.scene.paint.Color;
  * <p>
  * @author samcrow
  */
-public class InteractionPoint extends Point {
+public class InteractionPoint extends Point0 {
     
     private int focalAntId = 0;
     
@@ -28,10 +28,10 @@ public class InteractionPoint extends Point {
     private InteractionPoint otherPoint;
 
     public InteractionPoint(int x, int y) {
-        super(x, y);
+        super(x, y, Source.User);
     }
 
-    public InteractionPoint(Point other) {
+    public InteractionPoint(Point0 other) {
         super(other);
     }
     

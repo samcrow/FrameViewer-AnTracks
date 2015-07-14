@@ -5,16 +5,16 @@ import java.util.List;
 import java.util.logging.Logger;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
-import org.samcrow.frameviewer.trajectory.Trajectory;
+import org.samcrow.frameviewer.trajectory.Trajectory0;
 
 public class DataStoringPlaybackControlModel extends PlaybackControlModel {
 
-    private MultiFrameDataStore<Trajectory> trajectoryDataStore;
+    private MultiFrameDataStore<Trajectory0> trajectoryDataStore;
 
     private FrameCanvas canvas;
 
     public DataStoringPlaybackControlModel(FrameFinder frameFinder,
-            MultiFrameDataStore<Trajectory> newTrajectoryDataStore) {
+            MultiFrameDataStore<Trajectory0> newTrajectoryDataStore) {
         
         super(frameFinder);
         trajectoryDataStore = newTrajectoryDataStore;
@@ -52,13 +52,13 @@ public class DataStoringPlaybackControlModel extends PlaybackControlModel {
         this.canvas.currentFrameProperty().bind(this.currentFrameProperty());
     }
     
-    public void setTrajectoryDataStore(MultiFrameDataStore<Trajectory> trajectoryDataStore) {
+    public void setTrajectoryDataStore(MultiFrameDataStore<Trajectory0> trajectoryDataStore) {
         this.trajectoryDataStore = trajectoryDataStore;
         //Move to the first frame
         int firstFrame = getFirstFrame();
         setCurrentFrame(firstFrame);
        
-        List<Trajectory> trajectories = trajectoryDataStore.getObjectsForCurrentFrame();
+        List<Trajectory0> trajectories = trajectoryDataStore.getObjectsForCurrentFrame();
         canvas.setTrajectories(trajectories);
         
         

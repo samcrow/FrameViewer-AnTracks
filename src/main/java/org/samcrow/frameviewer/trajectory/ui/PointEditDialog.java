@@ -17,8 +17,8 @@ import javafx.stage.StageStyle;
 import javafx.stage.Window;
 import org.samcrow.frameviewer.trajectory.InteractionPoint;
 import org.samcrow.frameviewer.trajectory.InteractionType;
-import org.samcrow.frameviewer.trajectory.Point;
-import org.samcrow.frameviewer.trajectory.Trajectory;
+import org.samcrow.frameviewer.trajectory.Point0;
+import org.samcrow.frameviewer.trajectory.Trajectory0;
 import org.samcrow.frameviewer.ui.IntegerField;
 import org.samcrow.frameviewer.ui.RadioButtonGroup;
 
@@ -41,19 +41,19 @@ public class PointEditDialog extends Stage {
     // Trajectory
     private final IntegerField trajectoryIdField = new IntegerField();
     
-    private final RadioButtonGroup<Trajectory.FromAction> fromAction = new RadioButtonGroup<>(Trajectory.FromAction.values());
-    private final RadioButtonGroup<Trajectory.ToAction> toAction = new RadioButtonGroup<>(Trajectory.ToAction.values());
+    private final RadioButtonGroup<Trajectory0.FromAction> fromAction = new RadioButtonGroup<>(Trajectory0.FromAction.values());
+    private final RadioButtonGroup<Trajectory0.ToAction> toAction = new RadioButtonGroup<>(Trajectory0.ToAction.values());
     
     // Point
-    private final RadioButtonGroup<Point.Activity> focalActivityGroup = new RadioButtonGroup<>(Point.Activity.values());
+    private final RadioButtonGroup<Point0.Activity> focalActivityGroup = new RadioButtonGroup<>(Point0.Activity.values());
     
     // InteractionPoint
     private final CheckBox interactionBox = new CheckBox("Interaction");
     private final RadioButtonGroup<InteractionType> interactionTypeGroup = new RadioButtonGroup<>(InteractionType.values());
     private final IntegerField metTrajectoryIdField = new IntegerField();
-    private final RadioButtonGroup<Point.Activity> metActivityGroup = new RadioButtonGroup<>(Point.Activity.values());
+    private final RadioButtonGroup<Point0.Activity> metActivityGroup = new RadioButtonGroup<>(Point0.Activity.values());
     
-    public PointEditDialog(Trajectory trajectory, Point point, Window owner) {
+    public PointEditDialog(Trajectory0 trajectory, Point0 point, Window owner) {
         initOwner(owner);
         initModality(Modality.WINDOW_MODAL);
         initStyle(StageStyle.UTILITY);
@@ -78,7 +78,7 @@ public class PointEditDialog extends Stage {
             interactionBox.setSelected(false);
             // Default values for interaction fields
             interactionTypeGroup.setValue(InteractionType.Unknown);
-            metActivityGroup.setValue(Point.Activity.NotCarrying);
+            metActivityGroup.setValue(Point0.Activity.NotCarrying);
         }
     }
     
@@ -168,7 +168,7 @@ public class PointEditDialog extends Stage {
         return trajectoryIdField.getValue();
     }
     
-    public final Point.Activity getActivity() {
+    public final Point0.Activity getActivity() {
         return focalActivityGroup.getValue();
     }
     
@@ -184,15 +184,15 @@ public class PointEditDialog extends Stage {
         return metTrajectoryIdField.getValue();
     }
     
-    public final Point.Activity getMetTrajectoryActivity() {
+    public final Point0.Activity getMetTrajectoryActivity() {
         return metActivityGroup.getValue();
     }
     
-    public final Trajectory.FromAction getFromAction() {
+    public final Trajectory0.FromAction getFromAction() {
         return fromAction.getValue();
     }
     
-    public final Trajectory.ToAction getToAction() {
+    public final Trajectory0.ToAction getToAction() {
         return toAction.getValue();
     }
     

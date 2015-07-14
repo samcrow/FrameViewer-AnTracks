@@ -18,7 +18,7 @@ import javafx.stage.StageStyle;
 import javafx.stage.Window;
 import org.samcrow.frameviewer.trajectory.InteractionPoint;
 import org.samcrow.frameviewer.trajectory.InteractionType;
-import org.samcrow.frameviewer.trajectory.Point;
+import org.samcrow.frameviewer.trajectory.Point0;
 
 /**
  * A dialog that allows a trajectory marker to be created or edited
@@ -32,12 +32,12 @@ public class InteractionPointDialog extends Stage {
     protected final IntegerField antIdField = new IntegerField();
     protected final IntegerField metAntIdField = new IntegerField(0);
     
-    protected final RadioButtonGroup<Point.Activity> activityBox = new RadioButtonGroup<>(Point.Activity.values());
+    protected final RadioButtonGroup<Point0.Activity> activityBox = new RadioButtonGroup<>(Point0.Activity.values());
     
     protected final RadioButtonGroup<InteractionType> interactionTypeBox
             = new RadioButtonGroup<>(InteractionType.values());
     
-    protected final RadioButtonGroup<Point.Activity> metActivityBox = new RadioButtonGroup<>(Point.Activity.values());
+    protected final RadioButtonGroup<Point0.Activity> metActivityBox = new RadioButtonGroup<>(Point0.Activity.values());
     
 
     private final VBox root = new VBox();
@@ -166,19 +166,19 @@ public class InteractionPointDialog extends Stage {
         return metAntIdField.getValue();
     }
     
-    public Point.Activity getFocalAntActivity() {
+    public Point0.Activity getFocalAntActivity() {
         return activityBox.getValue();
     }
     
-    public final void setFocalAntActivity(Point.Activity activity) {
+    public final void setFocalAntActivity(Point0.Activity activity) {
         activityBox.setValue(activity);
     }
     
-    public Point.Activity getMetAntActivity() {
+    public Point0.Activity getMetAntActivity() {
         return metActivityBox.getValue();
     }
     
-    public final void setMetAntActivity(Point.Activity activity) {
+    public final void setMetAntActivity(Point0.Activity activity) {
         metActivityBox.setValue(activity);
     }
     
