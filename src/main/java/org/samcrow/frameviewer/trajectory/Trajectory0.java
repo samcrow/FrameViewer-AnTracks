@@ -168,12 +168,16 @@ public class Trajectory0 extends TrackingTrajectory<Point0> {
 	    }
 
 	    final boolean hilighted = currentFrame == entry.frame;
-	    // Draw the marker
-	    point.paint(gc, canvasPos.getX(), canvasPos.getY(), hilighted);
+	    if (point.getSource() != Point.Source.User) {
+		// Draw the marker
+		point.paint(gc, canvasPos.getX(), canvasPos.getY(), hilighted);
+	    }
 
 	    lastLocation = canvasPos;
 	}
-	if (currentFrame > getLastFrame()) {
+	// Past-end tracking
+
+	if (lastLocation != null && currentFrame > getLastFrame()) {
 	    for (int frame = getLastFrame() + 1; frame <= currentFrame; frame++) {
 		Point0 point = getWithTracking(frame);
 		final Point2D canvasPos = imageToCanvasPosition(new Point2D(
@@ -182,7 +186,17 @@ public class Trajectory0 extends TrackingTrajectory<Point0> {
 			nativeImageHeight,
 			actualImageWidth, actualImageHeight, imageTopLeftX,
 			imageTopLeftY);
-		point.paint(gc, canvasPos.getX(), canvasPos.getY(), false);
+		// Draw a line
+		if (lastLocation != null) {
+		    gc.setStroke(Color.YELLOW);
+		    gc.strokeLine(lastLocation.getX(), lastLocation.getY(),
+			    canvasPos.getX(), canvasPos.getY());
+		}
+
+		if (frame == currentFrame) {
+		    point.paint(gc, canvasPos.getX(), canvasPos.getY(), false);
+		}
+		lastLocation = canvasPos;
 	    }
 	}
     }

@@ -1,7 +1,10 @@
 package org.samcrow.frameviewer.trajectory;
 
 import java.util.Iterator;
-import junit.framework.TestCase;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+import org.junit.Test;
 import org.samcrow.frameviewer.trajectory.Point.Source;
 import org.samcrow.frameviewer.trajectory.Trajectory.Entry;
 
@@ -9,22 +12,9 @@ import org.samcrow.frameviewer.trajectory.Trajectory.Entry;
  *
  * @author samcrow
  */
-public class TrajectoryTest extends TestCase {
+public class TrajectoryTest {
     
-    public TrajectoryTest(String testName) {
-        super(testName);
-    }
-    
-    @Override
-    protected void setUp() throws Exception {
-        super.setUp();
-    }
-    
-    @Override
-    protected void tearDown() throws Exception {
-        super.tearDown();
-    }
-    
+    @Test
     public void testSetGet() {
         Trajectory0 t = new Trajectory0(null);
         
@@ -39,6 +29,7 @@ public class TrajectoryTest extends TestCase {
         
     }
     
+    @Test
     public void testIterator() {
         
         Trajectory0 t = new Trajectory0(null);
@@ -59,6 +50,7 @@ public class TrajectoryTest extends TestCase {
         
     }
     
+    @Test
     public void testAppend() {
         
         Trajectory0 t1 = new Trajectory0(null);

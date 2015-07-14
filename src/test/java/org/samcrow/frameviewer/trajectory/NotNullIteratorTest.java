@@ -3,28 +3,16 @@ package org.samcrow.frameviewer.trajectory;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-import junit.framework.TestCase;
+import org.junit.Test;
+import static org.junit.Assert.*;
 
 /**
  *
  * @author samcrow
  */
-public class NotNullIteratorTest extends TestCase {
+public class NotNullIteratorTest {
     
-    public NotNullIteratorTest(String testName) {
-        super(testName);
-    }
-    
-    @Override
-    protected void setUp() throws Exception {
-        super.setUp();
-    }
-    
-    @Override
-    protected void tearDown() throws Exception {
-        super.tearDown();
-    }
-
+    @Test
     public void testNoNulls() {
         final List<String> list = new ArrayList<>();
         list.add("Hello");
@@ -51,6 +39,7 @@ public class NotNullIteratorTest extends TestCase {
         }
     }
     
+    @Test
     public void testAllNulls() {
         final List<String> list = new ArrayList<>();
         
@@ -64,6 +53,7 @@ public class NotNullIteratorTest extends TestCase {
         
     }
     
+    @Test
     public void testMixed() {
         
         System.out.println("testMixed");

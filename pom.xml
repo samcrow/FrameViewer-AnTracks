@@ -1,5 +1,5 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	 xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>org.samcrow</groupId>
@@ -11,80 +11,94 @@
     <url>https://github.com/samcrow/FrameViewer-AnTracks</url>
     
     <organization>
-        <name>Sam Crow</name>
-        <url>https://github.com/samcrow</url>
+	<name>Sam Crow</name>
+	<url>https://github.com/samcrow</url>
     </organization>
 
     <properties>
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+	<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
   
     <build>
-        <plugins>
-            <plugin>
-                <groupId>com.google.code.maven-replacer-plugin</groupId>
-                <artifactId>replacer</artifactId>
-                <version>1.5.2</version>
-                <executions>
-                    <execution>
-                        <phase>prepare-package</phase>
-                        <goals>
-                            <goal>replace</goal>
-                        </goals>                    
-                    </execution>
-                </executions>
-                <configuration>
-                    <ignoreMissingFile>true</ignoreMissingFile>
-                    <file>src/main/bash/run-snow.sh</file>
-                    <outputFile>
-                        <!-- Put the file, with things replaced, in the JFX JAR directory  -->
-                        target/jfx/app/run-snow.sh
-                    </outputFile>
-                    <regex>false</regex>
-                    <token>$name$</token>
-                    <value>${project.build.finalName}</value>
-                </configuration>
-            </plugin>
-            
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <version>2.3.2</version>
-                <configuration>
-                    <source>1.8</source>
-                    <target>1.8</target>
-                </configuration>
-            </plugin>
-        </plugins>
+	<plugins>
+	    <plugin>
+		<groupId>com.google.code.maven-replacer-plugin</groupId>
+		<artifactId>replacer</artifactId>
+		<version>1.5.2</version>
+		<executions>
+		    <execution>
+			<phase>prepare-package</phase>
+			<goals>
+			    <goal>replace</goal>
+			</goals>                    
+		    </execution>
+		</executions>
+		<configuration>
+		    <ignoreMissingFile>true</ignoreMissingFile>
+		    <file>src/main/bash/run-snow.sh</file>
+		    <outputFile>
+			<!-- Put the file, with things replaced, in the JFX JAR directory  -->
+			target/jfx/app/run-snow.sh
+		    </outputFile>
+		    <regex>false</regex>
+		    <token>$name$</token>
+		    <value>${project.build.finalName}</value>
+		</configuration>
+	    </plugin>
+	    <plugin>
+		<groupId>com.zenjava</groupId>
+		<artifactId>javafx-maven-plugin</artifactId>
+		<version>8.1.2</version>
+		<configuration>
+		    <mainClass>org.samcrow.frameviewer.App</mainClass>
+		</configuration>
+	    </plugin>
+	    <plugin>
+		<groupId>org.apache.maven.plugins</groupId>
+		<artifactId>maven-compiler-plugin</artifactId>
+		<version>2.3.2</version>
+		<configuration>
+		    <source>1.8</source>
+		    <target>1.8</target>
+		</configuration>
+	    </plugin>
+	</plugins>
     </build>
 
     <dependencies>
-        <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
-            <version>3.8.1</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.jfxtras</groupId>
-            <artifactId>jfxtras-labs</artifactId>
-            <version>2.2-r5</version>
-        </dependency>
-        <dependency>
-            <groupId>com.google.guava</groupId>
-            <artifactId>guava</artifactId>
-            <version>13.0.1</version>
-        </dependency>
-        <dependency>
-            <groupId>mysql</groupId>
-            <artifactId>mysql-connector-java</artifactId>
-            <version>5.1.32</version>
-        </dependency>
-        <dependency>
-            <groupId>commons-lang</groupId>
-            <artifactId>commons-lang</artifactId>
-            <version>2.6</version>
-        </dependency>
+	<dependency>
+	    <groupId>com.oracle</groupId>
+	    <artifactId>javafx</artifactId>
+	    <version>8.0.0</version>
+	    <scope>system</scope>
+	    <systemPath>${java.home}/../lib/javafx-mx.jar</systemPath>
+	</dependency>
+	<dependency>
+	    <groupId>junit</groupId>
+	    <artifactId>junit</artifactId>
+	    <version>4.12</version>
+	    <scope>test</scope>
+	</dependency>
+	<dependency>
+	    <groupId>org.jfxtras</groupId>
+	    <artifactId>jfxtras-labs</artifactId>
+	    <version>2.2-r5</version>
+	</dependency>
+	<dependency>
+	    <groupId>com.google.guava</groupId>
+	    <artifactId>guava</artifactId>
+	    <version>13.0.1</version>
+	</dependency>
+	<dependency>
+	    <groupId>mysql</groupId>
+	    <artifactId>mysql-connector-java</artifactId>
+	    <version>5.1.32</version>
+	</dependency>
+	<dependency>
+	    <groupId>commons-lang</groupId>
+	    <artifactId>commons-lang</artifactId>
+	    <version>2.6</version>
+	</dependency>
 	<dependency>
 	    <groupId>org.samcrow</groupId>
 	    <artifactId>AntTracker</artifactId>

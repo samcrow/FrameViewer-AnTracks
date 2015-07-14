@@ -1,5 +1,7 @@
 package org.samcrow.frameviewer.trajectory;
 
+import java.util.Objects;
+
 /**
  * A point in a video frame.
  *
@@ -98,5 +100,36 @@ public class Point {
     public String toString() {
 	return "Point{" + "x=" + x + ", y=" + y + ", source=" + source + '}';
     }
+
+    @Override
+    public int hashCode() {
+	int hash = 5;
+	hash = 67 * hash + this.x;
+	hash = 67 * hash + this.y;
+	hash = 67 * hash + Objects.hashCode(this.source);
+	return hash;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+	if (obj == null) {
+	    return false;
+	}
+	if (getClass() != obj.getClass()) {
+	    return false;
+	}
+	final Point other = (Point) obj;
+	if (this.x != other.x) {
+	    return false;
+	}
+	if (this.y != other.y) {
+	    return false;
+	}
+	if (this.source != other.source) {
+	    return false;
+	}
+	return true;
+    }
+    
     
 }

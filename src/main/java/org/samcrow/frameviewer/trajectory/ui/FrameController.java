@@ -18,7 +18,6 @@ import org.samcrow.frameviewer.PaintableCanvas;
 import org.samcrow.frameviewer.io3.DatabaseTrajectoryDataStore;
 import org.samcrow.frameviewer.track.Tracker;
 import org.samcrow.frameviewer.trajectory.Point0;
-import org.samcrow.frameviewer.trajectory.TrackingTrajectory;
 import org.samcrow.frameviewer.trajectory.Trajectory0;
 
 /**
