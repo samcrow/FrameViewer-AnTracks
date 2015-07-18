@@ -6,7 +6,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import javafx.event.ActionEvent;
-import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
@@ -53,12 +52,9 @@ public class DatabaseConnectionDialog extends Stage {
 
             cancelButton.setCancelButton(true);
             buttonBox.getChildren().add(cancelButton);
-            cancelButton.setOnAction(new EventHandler<ActionEvent>() {
-                @Override
-                public void handle(ActionEvent t) {
-                    hide();
-                }
-            });
+            cancelButton.setOnAction((ActionEvent t) -> {
+		hide();
+	    });
 
             final Region spacer = new Region();
             buttonBox.getChildren().add(spacer);
@@ -100,7 +96,7 @@ public class DatabaseConnectionDialog extends Stage {
             switchToDataSetSelection();
 
         }
-        catch (SQLException ex) {
+        catch (Throwable ex) {
             MonologFX dialog = new MonologFX(MonologFX.Type.ERROR);
             dialog.setTitle("Could not connect to database");
             dialog.setMessage(ex.getMessage() + "\nPlease ensure that the address, username, password, and database are correct.");
@@ -166,12 +162,9 @@ public class DatabaseConnectionDialog extends Stage {
             root.getChildren().set(0, selectionView);
             connectionView = null;
 
-            nextButton.setOnAction(new EventHandler<ActionEvent>() {
-                @Override
-                public void handle(ActionEvent t) {
-                    selectDataSet();
-                }
-            });
+            nextButton.setOnAction((ActionEvent t) -> {
+		selectDataSet();
+	    });
         }
         catch (SQLException ex) {
             showDialog(ex);
@@ -184,12 +177,9 @@ public class DatabaseConnectionDialog extends Stage {
         root.getChildren().set(0, connectionView);
         selectionView = null;
 
-        nextButton.setOnAction(new EventHandler<ActionEvent>() {
-            @Override
-            public void handle(ActionEvent t) {
-                openConnection();
-            }
-        });
+        nextButton.setOnAction((ActionEvent t) -> {
+	    openConnection();
+	});
     }
 
     private void showDialog(Exception ex) {
