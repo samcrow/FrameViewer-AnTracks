@@ -86,7 +86,7 @@ public class FrameFinder {
         String uri = imageFiles[index].toURI().toString();
         Image image = new Image(uri);
         if(image.isError()) {
-            throw new IOException("Image for frame "+ (index + 1) +" could not be loaded");
+            throw new IOException("Image for frame "+ (index + 1) +" could not be loaded", image.getException());
         }
         
         return image;

@@ -17,6 +17,10 @@ class JpegFilter implements FileFilter {
             //Not a jpg or jpeg -extensioned file
             return false;
         }
+        // Ignore dot-prefixed files
+        if(file.getName().startsWith(".")) {
+            return false;
+        }
         return true;
     }
 
