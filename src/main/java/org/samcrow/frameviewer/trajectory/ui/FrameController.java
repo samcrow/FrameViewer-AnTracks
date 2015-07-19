@@ -37,6 +37,11 @@ public class FrameController {
 
     private final ObjectProperty<DatabaseTrajectoryDataStore> dataStore = new SimpleObjectProperty<>();
     
+    /**
+     * The trajectory selected for creation or editing, or null
+     */
+    private final ObjectProperty<Trajectory0> activeTrajectory = new SimpleObjectProperty<>();
+    
     private final Tracker tracker;
 
     public FrameController(PaintableCanvas canvas, Tracker tracker) {
@@ -257,4 +262,16 @@ public class FrameController {
     }
     
 
+    public Trajectory0 getActiveTrajectory() {
+	return activeTrajectory.get();
+    }
+    
+    public void setActiveTrajectory(Trajectory0 trajectory) {
+	activeTrajectory.set(trajectory);
+    }
+    
+    public final ObjectProperty<Trajectory0> activeTrajectoryProperty() {
+	return activeTrajectory;
+    }
+    
 }

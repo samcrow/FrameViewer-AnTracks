@@ -20,15 +20,13 @@ import org.samcrow.frameviewer.ui.TrajectoryEditDialog;
  */
 public class CreateModeController extends FrameController {
 
-    private Trajectory0 activeTrajectory;
-
     public CreateModeController(PaintableCanvas canvas, Tracker tracker) {
 	super(canvas, tracker);
     }
 
     @Override
     protected void handleMouseClicked(MouseEvent event, Point2D framePosition) {
-	if (activeTrajectory == null) {
+	if (getActiveTrajectory() == null) {
 	    // Create a new trajectory
 	    createTrajectory(new Point2D(event.getScreenX(), event.getScreenY()),
 		    framePosition);
@@ -77,8 +75,8 @@ public class CreateModeController extends FrameController {
 	    newPoint.setY((int) Math.round(frameLocation.getY()));
 	    newPoint.setSource(Source.User);
 	    // Propagate properties from the last point to the new point
-	    newPoint.setFocalAntId(activeTrajectory.getId());
-	    newPoint.setFocalAntActivity(activeTrajectory.get(activeTrajectory
+	    newPoint.setFocalAntId(getActiveTrajectory().getId());
+	    newPoint.setFocalAntActivity(getActiveTrajectory().get(getActiveTrajectory()
 		    .getLastFrame()).getActivity());
 	    newPoint.setMetAntId(trajectoryWithNearbyPoint.getId());
 
@@ -88,12 +86,12 @@ public class CreateModeController extends FrameController {
 	    newPoint = new InteractionPoint((int) Math.round(frameLocation
 		    .getX()), (int) Math.round(frameLocation.getY()));
 	    newPoint.setSource(Source.User);
-	    newPoint.setFocalAntId(activeTrajectory.getId());
-	    newPoint.setFocalAntActivity(activeTrajectory.get(activeTrajectory
+	    newPoint.setFocalAntId(getActiveTrajectory().getId());
+	    newPoint.setFocalAntActivity(getActiveTrajectory().get(getActiveTrajectory()
 		    .getLastFrame()).getActivity());
 	}
 	// Temporarily insert the point, so that it will be visible when the errorDialog appears
-	activeTrajectory.put(getCurrentFrame(), newPoint);
+	getActiveTrajectory().put(getCurrentFrame(), newPoint);
 	repaint();
 
 	InteractionPointDialog dialog = new InteractionPointDialog(getScene()
@@ -108,17 +106,18 @@ public class CreateModeController extends FrameController {
 	    newPoint.setType(dialog.getInteractionType());
 	    newPoint.setSource(Source.User);
 
-	    save(activeTrajectory);
+	    save(getActiveTrajectory());
 	    save(trajectoryWithNearbyPoint);
 	} else {
 	    // Remove the point
-	    activeTrajectory.remove(getCurrentFrame());
+	    getActiveTrajectory().remove(getCurrentFrame());
 	}
 
     }
 
     private void createCustomMarker(Point2D screenPosition,
 	    Point2D framePosition) {
+	final Trajectory0 activeTrajectory = getActiveTrajectory();
 	// Copy the point and edit it
 	Point0 newPoint = new Point0(activeTrajectory.get(activeTrajectory.getLastFrame()));
 	newPoint.setX((int) Math.round(framePosition.getX()));
@@ -149,7 +148,7 @@ public class CreateModeController extends FrameController {
 	    if (dialog.finalizeRequested()) {
                 // Make this trajectory no longer active
 		// The list still has a strong reference to it.
-		activeTrajectory = null;
+		setActiveTrajectory(null);
 	    }
 	} else {
 	    // Not succeeded; Remove the new point
@@ -159,13 +158,13 @@ public class CreateModeController extends FrameController {
 
     private void createDefaultMarker(Point2D framePosition) {
 	// Just add a new point with the same properties to the trajectory
-	Point0 newPoint = activeTrajectory.copyLastPoint();
+	Point0 newPoint = getActiveTrajectory().copyLastPoint();
 	newPoint.setX((int) Math.round(framePosition.getX()));
 	newPoint.setY((int) Math.round(framePosition.getY()));
 	newPoint.setSource(Source.User);
 
-	activeTrajectory.put(getCurrentFrame(), newPoint);
-	save(activeTrajectory);
+	getActiveTrajectory().put(getCurrentFrame(), newPoint);
+	save(getActiveTrajectory());
     }
 
     private void createTrajectory(Point2D screenPosition, Point2D framePosition) {
@@ -176,7 +175,8 @@ public class CreateModeController extends FrameController {
 	dialog.showAndWait();
 	if (dialog.succeeded()) {
 
-	    activeTrajectory = new Trajectory0(getTracker());
+	    final Trajectory0 activeTrajectory = new Trajectory0(getTracker());
+	    setActiveTrajectory(activeTrajectory);
 	    activeTrajectory.setDataStore(getDataStore());
 	    getTrajectories().add(activeTrajectory);
 	    activeTrajectory.setId(dialog.getTrajectoryId());

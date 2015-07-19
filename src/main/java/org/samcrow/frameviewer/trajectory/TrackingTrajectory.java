@@ -233,10 +233,15 @@ public class TrackingTrajectory<P extends Point> extends BasicTrajectory<P> {
 	if (tracker != null) {
 	    if (pastEnd == null) {
 		pastEnd = new BasicTrajectory<>();
+		pastEnd.put(getLastFrame(), get(getLastFrame()));
 	    }
 	    // Add lastFrame + 1 to the past end trajectory
-	    final int lastFrame = getLastFrame();
-	    final P lastPoint = get(lastFrame);
+	    final int lastFrame = pastEnd.getLastFrame();
+	    final P lastPoint = pastEnd.get(lastFrame);
+	    if(lastFrame >= frameTo) {
+		return;
+	    }
+	    
 	    P onePastEnd = newPoint(tracker.trackOne(lastPoint, lastFrame,
 		    lastFrame + 1), lastPoint, null);
 	    pastEnd.put(lastFrame + 1, onePastEnd);

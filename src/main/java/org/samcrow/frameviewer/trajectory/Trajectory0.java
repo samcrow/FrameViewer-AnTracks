@@ -134,12 +134,12 @@ public class Trajectory0 extends TrackingTrajectory<Point0> {
     public void paint(GraphicsContext gc, double nativeImageWidth,
 	    double nativeImageHeight, double actualImageWidth,
 	    double actualImageHeight, double imageTopLeftX, double imageTopLeftY,
-	    int currentFrame, TrajectoryDisplayMode mode) {
+	    int currentFrame, TrajectoryDisplayMode mode, boolean showPastEnd) {
 	switch (mode) {
 	    case Full:
 		paintFull(gc, nativeImageWidth, nativeImageHeight,
 			actualImageWidth, actualImageHeight, imageTopLeftX,
-			imageTopLeftY, currentFrame);
+			imageTopLeftY, currentFrame, showPastEnd);
 		break;
 	    case Hidden:
 		// Do nothing
@@ -151,7 +151,7 @@ public class Trajectory0 extends TrackingTrajectory<Point0> {
     private void paintFull(GraphicsContext gc, double nativeImageWidth,
 	    double nativeImageHeight, double actualImageWidth,
 	    double actualImageHeight, double imageTopLeftX, double imageTopLeftY,
-	    int currentFrame) {
+	    int currentFrame, boolean showPastEnd) {
 	Point2D lastLocation = null;
 	for (Entry<Point0> entry : this) {
 	    Point0 point = entry.point;
@@ -168,7 +168,7 @@ public class Trajectory0 extends TrackingTrajectory<Point0> {
 	    }
 
 	    final boolean hilighted = currentFrame == entry.frame;
-	    if (point.getSource() != Point.Source.User) {
+	    if (point.getSource() == Point.Source.User) {
 		// Draw the marker
 		point.paint(gc, canvasPos.getX(), canvasPos.getY(), hilighted);
 	    }
@@ -176,27 +176,30 @@ public class Trajectory0 extends TrackingTrajectory<Point0> {
 	    lastLocation = canvasPos;
 	}
 	// Past-end tracking
+	if (showPastEnd) {
 
-	if (lastLocation != null && currentFrame > getLastFrame()) {
-	    for (int frame = getLastFrame() + 1; frame <= currentFrame; frame++) {
-		Point0 point = getWithTracking(frame);
-		final Point2D canvasPos = imageToCanvasPosition(new Point2D(
-			point
-			.getX(), point.getY()), nativeImageWidth,
-			nativeImageHeight,
-			actualImageWidth, actualImageHeight, imageTopLeftX,
-			imageTopLeftY);
-		// Draw a line
-		if (lastLocation != null) {
-		    gc.setStroke(Color.YELLOW);
-		    gc.strokeLine(lastLocation.getX(), lastLocation.getY(),
-			    canvasPos.getX(), canvasPos.getY());
-		}
+	    if (lastLocation != null && currentFrame > getLastFrame()) {
+		for (int frame = getLastFrame() + 1; frame <= currentFrame; frame++) {
+		    Point0 point = getWithTracking(frame);
+		    final Point2D canvasPos = imageToCanvasPosition(new Point2D(
+			    point
+			    .getX(), point.getY()), nativeImageWidth,
+			    nativeImageHeight,
+			    actualImageWidth, actualImageHeight, imageTopLeftX,
+			    imageTopLeftY);
+		    // Draw a line
+		    if (lastLocation != null) {
+			gc.setStroke(Color.YELLOW);
+			gc.strokeLine(lastLocation.getX(), lastLocation.getY(),
+				canvasPos.getX(), canvasPos.getY());
+		    }
 
-		if (frame == currentFrame) {
-		    point.paint(gc, canvasPos.getX(), canvasPos.getY(), false);
+		    if (frame == currentFrame) {
+			point.paint(gc, canvasPos.getX(), canvasPos.getY(),
+				false);
+		    }
+		    lastLocation = canvasPos;
 		}
-		lastLocation = canvasPos;
 	    }
 	}
     }

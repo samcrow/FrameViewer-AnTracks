@@ -15,8 +15,6 @@ import org.samcrow.frameviewer.trajectory.Trajectory0;
  */
 public class EditModeController extends FrameController {
 
-    private Trajectory0 activeTrajectory;
-
     private boolean dragging = false;
 
     private Point0 activePoint;
@@ -41,6 +39,7 @@ public class EditModeController extends FrameController {
         dragging = false;
 
         // Look for a point to edit
+	final Trajectory0 activeTrajectory = getActiveTrajectory();
         if (activeTrajectory != null) {
             
             PointEditDialog dialog = new PointEditDialog(activeTrajectory, activePoint, getScene().getWindow());
@@ -84,7 +83,7 @@ public class EditModeController extends FrameController {
             else if(dialog.result == PointEditDialog.Result.DeleteTrajectory) {
                 getTrajectories().remove(activeTrajectory);
                 delete(activeTrajectory);
-                activeTrajectory = null;
+                setActiveTrajectory(null);
                 repaint();
             }
         }
@@ -95,8 +94,8 @@ public class EditModeController extends FrameController {
     protected void handleMouseReleased(MouseEvent event, Point2D framePosition) {
         
         dragging = false;
-        if(activePoint != null && activeTrajectory != null) {
-            save(activePoint, activeTrajectory.getId());
+        if(activePoint != null && getActiveTrajectory() != null) {
+            save(activePoint, getActiveTrajectory().getId());
         }
     }
 
@@ -104,7 +103,7 @@ public class EditModeController extends FrameController {
     protected void handleMousePressed(MouseEvent event, Point2D framePosition) {
         
         // Look for a point to drag
-        activeTrajectory = getTrajectoryNear(framePosition);
+        final Trajectory0 activeTrajectory = getTrajectoryNear(framePosition);
         if (activeTrajectory != null) {
             try {
                 activePoint = activeTrajectory.get(getCurrentFrame());
