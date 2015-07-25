@@ -23,6 +23,10 @@ public enum TrajectoryDisplayMode {
      */
     Interpolated,
     
+    //added by Jacob
+    
+    InterpolatedwithIDs,
+    
     /**
      * Trajectories not displayed
      */
