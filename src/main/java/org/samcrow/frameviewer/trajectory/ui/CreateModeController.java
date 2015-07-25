@@ -152,7 +152,7 @@ public class CreateModeController extends FrameController {
 	    }
 	} else {
 	    // Not succeeded; Remove the new point
-	    activeTrajectory.put(getCurrentFrame(), null);
+	    activeTrajectory.remove(getCurrentFrame());
 	}
     }
 
