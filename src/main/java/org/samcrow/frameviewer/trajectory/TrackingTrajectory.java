@@ -166,7 +166,7 @@ public class TrackingTrajectory<P extends Point> extends BasicTrajectory<P> {
     }
 
     private Entry<P> findNextUserDefined(int frame) {
-	int currentFrame = frame + 1;
+	int currentFrame = frame;
 	while (true) {
 	    Entry<P> next = findNext(currentFrame);
 	    if (next == null) {
@@ -180,7 +180,7 @@ public class TrackingTrajectory<P extends Point> extends BasicTrajectory<P> {
     }
 
     private Entry<P> findPreviousUserDefined(int frame) {
-	int currentFrame = frame - 1;
+	int currentFrame = frame;
 	while (true) {
 	    Entry<P> prev = findPrevious(currentFrame);
 	    if (prev == null) {
