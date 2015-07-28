@@ -64,19 +64,4 @@ public class DataStoringPlaybackControlModel extends PlaybackControlModel {
         
         canvas.repaint();
     }
-
-    /**
-     * Stores the data from the current frame into the data store.
-     * This should be called before a file is saved to ensure that data from the
-     * current frame gets saved.
-     */
-    public void syncCurrentFrameData() {
-        // TODO
-    }
-
-    public void undo() {
-        
-        // TODO
-    }
-
 }

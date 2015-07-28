@@ -197,6 +197,7 @@ public class DatabaseTrajectoryDataStore extends MultiFrameDataStore<Trajectory0
 		trajectory.setFromAction(startAction);
 		trajectory.setToAction(endAction);
 		trajectory.setDataStore(this);
+		trajectory.setId(trajectoryId);
 
 		trajectory.put(firstPointFrame, firstPoint);
 	    } else {

@@ -77,7 +77,8 @@ public class EditModeController extends FrameController {
             }
             else if(dialog.result == PointEditDialog.Result.DeletePoint) {
                 delete(activePoint, getCurrentFrame(), activeTrajectory.getId());
-                activeTrajectory.put(getCurrentFrame(), null);
+                activeTrajectory.remove(getCurrentFrame());
+		activePoint = null;
                 repaint();
             }
             else if(dialog.result == PointEditDialog.Result.DeleteTrajectory) {
@@ -104,6 +105,7 @@ public class EditModeController extends FrameController {
         
         // Look for a point to drag
         final Trajectory0 activeTrajectory = getTrajectoryNear(framePosition);
+	setActiveTrajectory(activeTrajectory);
         if (activeTrajectory != null) {
             try {
                 activePoint = activeTrajectory.get(getCurrentFrame());
