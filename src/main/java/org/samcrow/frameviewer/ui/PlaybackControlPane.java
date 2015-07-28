@@ -30,19 +30,12 @@ import static javafx.scene.layout.HBox.setMargin;
  */
 public class PlaybackControlPane extends HBox {
 
-    private final Button playBackwardsButton;
-
     private final Button jumpBackwardsButton;
-
-    private final Button pauseButton;
 
     private final Button jumpForwardButton;
 
-    private final Button playForwardButton;
-
     private final PlaybackControlModel model;
 
-    
     private final Button refreshButton;
     
     private final ObjectProperty<TrajectoryTool> trajectoryTool = new SimpleObjectProperty<>();
@@ -71,15 +64,6 @@ public class PlaybackControlPane extends HBox {
             final Region spacer = new Region();
             getChildren().add(spacer);
             setHgrow(spacer, Priority.ALWAYS);
-        }
-
-        {
-            playBackwardsButton = new Button("<");
-            playBackwardsButton.setOnAction(model.getPlayBackwardsButtonHandler());
-            playBackwardsButton.disableProperty().bind(model.playBackwardsEnabledProperty().not());
-
-            getChildren().add(playBackwardsButton);
-            setMargin(playBackwardsButton, PADDING);
         }
 
         {
@@ -126,15 +110,6 @@ public class PlaybackControlPane extends HBox {
         }
 
         {
-            pauseButton = new Button("||");
-            pauseButton.setOnAction(model.getPauseButtonHandler());
-            pauseButton.disableProperty().bind(model.pauseEnabledProperty().not());
-
-            getChildren().add(pauseButton);
-            setMargin(pauseButton, PADDING);
-        }
-
-        {
             jumpForwardButton = new Button(">|");
             jumpForwardButton.setOnAction(model.getJumpForwardButtonHandler());
             jumpForwardButton.disableProperty().bind(model.jumpForwardEnabledProperty().not());
@@ -142,16 +117,6 @@ public class PlaybackControlPane extends HBox {
             getChildren().add(jumpForwardButton);
             setMargin(jumpForwardButton, PADDING);
         }
-
-        {
-            playForwardButton = new Button(">");
-            playForwardButton.setOnAction(model.getPlayForwardButtonHandler());
-            playForwardButton.disableProperty().bind(model.playForwardEnabledProperty().not());
-
-            getChildren().add(playForwardButton);
-            setMargin(playForwardButton, PADDING);
-        }
-
         
         // Right spacer
         {
@@ -228,52 +193,18 @@ public class PlaybackControlPane extends HBox {
      * is attached to a scene.
      */
     public void setupAccelerators() {
-        final Scene scene = playBackwardsButton.getScene();
+        final Scene scene = getScene();
 
-        scene.getAccelerators().put(new KeyCodeCombination(KeyCode.LEFT), new Runnable() {
-            @Override
-            public void run() {
-                if (!jumpBackwardsButton.isDisabled()) {
-                    jumpBackwardsButton.fire();
-                }
-            }
-        });
-        scene.getAccelerators().put(new KeyCodeCombination(KeyCode.RIGHT), new Runnable() {
-            @Override
-            public void run() {
-                if (!jumpForwardButton.isDisabled()) {
-                    jumpForwardButton.fire();
-                }
-            }
-        });
-        scene.getAccelerators().put(new KeyCodeCombination(KeyCode.SPACE), new Runnable() {
-            @Override
-            public void run() {
-                PlaybackControlModel.State state = model.getState();
-                if (state == PlaybackControlModel.State.Paused) {
-                    model.setState(PlaybackControlModel.State.PlayingForward);
-                }
-                else {
-                    model.setState(PlaybackControlModel.State.Paused);
-                }
-            }
-        });
-        scene.getAccelerators().put(new KeyCodeCombination(KeyCode.LEFT, KeyCodeCombination.SHORTCUT_DOWN), new Runnable() {
-            @Override
-            public void run() {
-                if (!playBackwardsButton.isDisabled()) {
-                    playBackwardsButton.fire();
-                }
-            }
-        });
-        scene.getAccelerators().put(new KeyCodeCombination(KeyCode.RIGHT, KeyCodeCombination.SHORTCUT_DOWN), new Runnable() {
-            @Override
-            public void run() {
-                if (!playForwardButton.isDisabled()) {
-                    playForwardButton.fire();
-                }
-            }
-        });
+        scene.getAccelerators().put(new KeyCodeCombination(KeyCode.LEFT), (Runnable) () -> {
+	    if (!jumpBackwardsButton.isDisabled()) {
+		jumpBackwardsButton.fire();
+	    }
+	});
+        scene.getAccelerators().put(new KeyCodeCombination(KeyCode.RIGHT), (Runnable) () -> {
+	    if (!jumpForwardButton.isDisabled()) {
+		jumpForwardButton.fire();
+	    }
+	});
     }
 
 }

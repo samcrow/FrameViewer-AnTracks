@@ -1,6 +1,5 @@
 package org.samcrow.frameviewer;
 
-import java.util.Timer;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.ObjectProperty;
@@ -23,19 +22,6 @@ import javafx.scene.image.Image;
  * @author Sam Crow
  */
 public class PlaybackControlModel implements CurrentFrameProvider {
-    
-    /**
-     * If the pause button is enabled
-     */
-    private final BooleanProperty pauseEnabled = new SimpleBooleanProperty(true);
-    /**
-     * If the play forward button should be enabled
-     */
-    private final BooleanProperty playForwardEnabled = new SimpleBooleanProperty(true);
-    /**
-     * If the play backwards button should be enabled
-     */
-    private final BooleanProperty playBackwardsEnabled = new SimpleBooleanProperty(true);
     /**
      * If the jump forward button should be enabled
      */
@@ -55,20 +41,6 @@ public class PlaybackControlModel implements CurrentFrameProvider {
      * The frame number that is currently displayed
      */
     private final IntegerProperty currentFrame = new SimpleIntegerProperty();
-    
-    
-    public static enum State {
-        Paused,
-        PlayingBackwards,
-        PlayingForward,
-    }
-    
-    private final ObjectProperty<State> state = new SimpleObjectProperty<>(State.Paused);
-    
-    /**
-     * The player used to play video
-     */
-    private FramePlayer player;
     
     /**
      * Loads frames
@@ -90,26 +62,16 @@ public class PlaybackControlModel implements CurrentFrameProvider {
                 
                 //Disable backwards buttons if the first frame has been reached
                 if(frame <= getFirstFrame()) {
-                    playBackwardsEnabled.set(false);
                     jumpBackwardsEnabled.set(false);
-                    if(player != null) {
-                        player.cancel();
-                    }
                 }
                 else {
-                    playBackwardsEnabled.set(true);
                     jumpBackwardsEnabled.set(true);
                 }
                 //Disable forwards buttons if the last frame has been reached
                 if(frame >= getMaximumFrame()) {
-                    playForwardEnabled.set(false);
                     jumpForwardEnabled.set(false);
-                    if(player != null) {
-                        player.cancel();
-                    }
                 }
                 else {
-                    playForwardEnabled.set(true);
                     jumpForwardEnabled.set(true);
                 }
             }
@@ -120,25 +82,6 @@ public class PlaybackControlModel implements CurrentFrameProvider {
         currentFrame.set(getFirstFrame());
     }
     
-    /**
-     * @return if the pause button should be enabled
-     */
-    public final ReadOnlyBooleanProperty pauseEnabledProperty() {
-        return pauseEnabled;
-    }
-    
-    /**
-     * @return if the play forward button should be enabled
-     */
-    public final ReadOnlyBooleanProperty playForwardEnabledProperty() {
-        return playForwardEnabled;
-    }
-    /**
-     * @return if the play backwards button should be enabled
-     */
-    public final ReadOnlyBooleanProperty playBackwardsEnabledProperty() {
-        return playBackwardsEnabled;
-    }
     /**
      * @return if the jump forward button should be enabled
      */
@@ -152,72 +95,6 @@ public class PlaybackControlModel implements CurrentFrameProvider {
         return jumpBackwardsEnabled;
     }
     
-    private void pauseButtonClicked() {
-        //Stop the player
-        if(player != null) {
-            player.cancel();
-            player = null;
-        }
-        //Enable all buttons except pause
-        pauseEnabled.set(false);
-        playForwardEnabled.set(true);
-        playBackwardsEnabled.set(true);
-        jumpForwardEnabled.set(true);
-        jumpBackwardsEnabled.set(true);
-        
-        state.set(State.Paused);
-    }
-    
-    private void playForwardButtonClicked() {
-        //Cancel old player, if it exists
-        if(player != null) {
-            player.cancel();
-        }
-        //Set up player
-        player = new ForwardFramePlayer(this);
-        player.setOnCancelled(new Runnable() {
-            @Override
-            public void run() {
-                pauseButtonClicked();
-            }
-        });
-        new Timer("Frame player").schedule(player, 0, player.getMillisecondsBetweenFrames());
-        
-        pauseEnabled.set(true);
-        //Disable all non-pause buttons
-        playForwardEnabled.set(false);
-        playBackwardsEnabled.set(false);
-        jumpForwardEnabled.set(false);
-        jumpBackwardsEnabled.set(false);
-        
-        state.set(State.PlayingForward);
-    }
-    
-    private void playBackwardsButtonClicked() {
-        //Cancel old player, if it exists
-        if(player != null) {
-            player.cancel();
-        }
-        //Set up player
-        player = new BackwardsFramePlayer(this);
-        player.setOnCancelled(new Runnable() {
-            @Override
-            public void run() {
-                pauseButtonClicked();
-            }
-        });
-        new Timer("Frame player").schedule(player, 0, player.getMillisecondsBetweenFrames());
-        
-        pauseEnabled.set(true);
-        //Disable all non-pause buttons
-        playForwardEnabled.set(false);
-        playBackwardsEnabled.set(false);
-        jumpForwardEnabled.set(false);
-        jumpBackwardsEnabled.set(false);
-        
-        state.set(State.PlayingBackwards);
-    }
-    
     private void jumpForwardButtonClicked() {
         if(getCurrentFrame() < getMaximumFrame()) {
             currentFrame.set(currentFrame.get() + 1);
@@ -229,40 +106,6 @@ public class PlaybackControlModel implements CurrentFrameProvider {
             currentFrame.set(currentFrame.get() - 1);
         }
     }
-    
-    private final EventHandler<ActionEvent> pauseHandler = new EventHandler<ActionEvent>() {
-        @Override
-        public void handle(ActionEvent t) {
-            pauseButtonClicked();
-        }
-    };
-    
-    public final EventHandler<ActionEvent> getPauseButtonHandler() {
-        return pauseHandler;
-    }
-    
-    private final EventHandler<ActionEvent> playForwardHandler = new EventHandler<ActionEvent>() {
-        @Override
-        public void handle(ActionEvent t) {
-            playForwardButtonClicked();
-        }
-    };
-    
-    public final EventHandler<ActionEvent> getPlayForwardButtonHandler() {
-        return playForwardHandler;
-    }
-    
-    private final EventHandler<ActionEvent> playBackwardsHandler = new EventHandler<ActionEvent>() {
-        @Override
-        public void handle(ActionEvent t) {
-            playBackwardsButtonClicked();
-        }
-    };
-    
-    public final EventHandler<ActionEvent> getPlayBackwardsButtonHandler() {
-        return playBackwardsHandler;
-    }
-    
     
     private final EventHandler<ActionEvent> jumpForwardHandler = new EventHandler<ActionEvent>() {
         @Override
@@ -313,40 +156,5 @@ public class PlaybackControlModel implements CurrentFrameProvider {
     
     public Image getCurrentFrameImage() {
         return currentFrameImage.get();
-    }
-    
-    public final ReadOnlyObjectProperty<State> stateProperty() {
-        return state;
-    }
-    
-    public State getState() {
-        return state.get();
-    }
-    
-    public void setState(State newState) {
-        switch(newState) {
-            case Paused:
-                pauseButtonClicked();
-                break;
-            case PlayingForward:
-                if(playForwardEnabled.get()) {
-                    playForwardButtonClicked();
-                }
-                else {
-                    pauseButtonClicked();
-                    playForwardButtonClicked();
-                }
-                break;
-            case PlayingBackwards:
-                if(playBackwardsEnabled.get()) {
-                    playBackwardsButtonClicked();
-                }
-                else {
-                    pauseButtonClicked();
-                    playBackwardsButtonClicked();
-                }
-                break;
-        }
-        state.set(newState);
     }
 }
