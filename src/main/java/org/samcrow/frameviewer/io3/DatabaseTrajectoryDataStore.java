@@ -13,6 +13,7 @@ import java.util.List;
 import org.samcrow.frameviewer.MultiFrameDataStore;
 import org.samcrow.frameviewer.trajectory.InteractionPoint;
 import org.samcrow.frameviewer.trajectory.InteractionType;
+import org.samcrow.frameviewer.trajectory.Point;
 import org.samcrow.frameviewer.trajectory.Point.Source;
 import org.samcrow.frameviewer.trajectory.Point0;
 import org.samcrow.frameviewer.trajectory.Trajectory.Entry;
@@ -341,6 +342,7 @@ public class DatabaseTrajectoryDataStore extends MultiFrameDataStore<Trajectory0
 			+ "`frame_x` = " + point.getX() + ','
 			+ "`frame_y` = " + point.getY() + ','
 			+ "`activity` = '" + point.getActivity().name() + "',"
+			+ "`source` = '" + point.getSource().name() + "',"
 			+ "`is_interaction` = 1,"
 			+ "`interaction_met_trajectory_id` = " + iPoint
 			.getMetAntId() + ','
@@ -355,6 +357,7 @@ public class DatabaseTrajectoryDataStore extends MultiFrameDataStore<Trajectory0
 			+ "`frame_x` = " + point.getX() + ','
 			+ "`frame_y` = " + point.getY() + ','
 			+ "`activity` = '" + point.getActivity().name() + "',"
+			+ "`source` = '" + point.getSource().name() + "',"
 			+ "`is_interaction` = 0"
 			+ " WHERE  `trajectory_id` = " + trajectoryId
 			+ " AND `frame_number` = " + frame);
@@ -392,6 +395,7 @@ public class DatabaseTrajectoryDataStore extends MultiFrameDataStore<Trajectory0
 			+ "`frame_x`,"
 			+ "`frame_y`,"
 			+ "`activity`,"
+			+ "`source`,"
 			+ "`is_interaction`,"
 			+ "`interaction_met_trajectory_id`,"
 			+ "`interaction_type`,"
@@ -402,6 +406,7 @@ public class DatabaseTrajectoryDataStore extends MultiFrameDataStore<Trajectory0
 			+ point.getX() + ','
 			+ point.getY() + ','
 			+ '\'' + point.getActivity().name() + "',"
+			+ '\'' + point.getSource().name() + "',"
 			+ "1," // is interaction
 			+ iPoint.getMetAntId() + ','
 			+ '\'' + iPoint.getType().name() + "',"
@@ -414,13 +419,15 @@ public class DatabaseTrajectoryDataStore extends MultiFrameDataStore<Trajectory0
 			+ "`frame_number`,"
 			+ "`frame_x`,"
 			+ "`frame_y`,"
-			+ "`activity`"
+			+ "`activity`,"
+			+ "`source`"
 			+ ") VALUES ("
 			+ trajectoryId + ','
 			+ frame + ','
 			+ point.getX() + ','
 			+ point.getY() + ','
-			+ '\'' + point.getActivity().name() + '\''
+			+ '\'' + point.getActivity().name() + "',"
+			+ '\'' + point.getSource().name() + '\''
 			+ ")";
 
 		statement.executeUpdate(query);
@@ -449,6 +456,7 @@ public class DatabaseTrajectoryDataStore extends MultiFrameDataStore<Trajectory0
 		    + "`frame_x` INTEGER NOT NULL,"
 		    + "`frame_y` INTEGER NOT NULL,"
 		    + "`activity` varchar(255) NOT NULL DEFAULT 'NotCarrying',"
+		    + "`source` varchar(255) NOT NULL DEFAULT 'User',"
 		    + "`is_interaction` SMALLINT NOT NULL DEFAULT 0,"
 		    + "`interaction_met_trajectory_id` int,"
 		    + "`interaction_type` varchar(255),"
@@ -478,6 +486,7 @@ public class DatabaseTrajectoryDataStore extends MultiFrameDataStore<Trajectory0
 	// Set common attributes
 	point.setActivity(Point0.Activity.safeValueOf(result.getString(
 		"activity")));
+	point.setSource(Point.Source.safeValueOf(result.getString("source")));
 
 	return point;
     }

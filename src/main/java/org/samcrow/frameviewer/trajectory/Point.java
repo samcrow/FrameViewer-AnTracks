@@ -28,7 +28,22 @@ public class Point {
 	/**
 	 * The point was calculated using image-based tracking
 	 */
-	Tracking,
+	Tracking,;
+	
+	/**
+	 * Returns the source with the specified name, or User if the name
+	 * is not valid
+	 * @param name
+	 * @return 
+	 */
+	public static Source safeValueOf(String name) {
+	    try {
+		return valueOf(name);
+	    }
+	    catch (Exception e) {
+		return User;
+	    }
+	}
     }
 
     /**

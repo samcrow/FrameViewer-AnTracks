@@ -96,7 +96,9 @@ public class EditModeController extends FrameController {
         
         dragging = false;
         if(activePoint != null && getActiveTrajectory() != null) {
+	    getActiveTrajectory().put(getCurrentFrame(), activePoint);
             save(activePoint, getActiveTrajectory().getId());
+	    repaint();
         }
     }
 
