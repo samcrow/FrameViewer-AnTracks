@@ -74,21 +74,23 @@ The trajectories table stores trajectories. Each trajectory has zero or more poi
 The points table stores the points that correspond to trajectories. Each point has one trajectory. The following describes the schema:
 
 	CREATE TABLE `data_set_name_points` (
-	  `point_id` int(11) NOT NULL AUTO_INCREMENT,
-	  `trajectory_id` int(11) NOT NULL,
-	  `frame_number` int(11) NOT NULL,
-	  `frame_x` int(11) NOT NULL,
-	  `frame_y` int(11) NOT NULL,
-	  `activity` varchar(255) NOT NULL DEFAULT 'NotCarrying',
-	  `is_interaction` smallint(6) NOT NULL DEFAULT '0',
-	  `interaction_met_trajectory_id` int(11) DEFAULT NULL,
-	  `interaction_type` varchar(255) DEFAULT NULL,
-	  `interaction_met_ant_activity` varchar(255) DEFAULT NULL,
-	  PRIMARY KEY (`point_id`)
+	`point_id` int(11) NOT NULL AUTO_INCREMENT,
+	`trajectory_id` int(11) NOT NULL,
+	`frame_number` int(11) NOT NULL,
+	`frame_x` int(11) NOT NULL,
+	`frame_y` int(11) NOT NULL,
+	`activity` varchar(255) NOT NULL DEFAULT 'NotCarrying',
+	`source` varchar(255) NOT NULL DEFAULT 'User',
+	`is_interaction` smallint(6) NOT NULL DEFAULT '0',
+	`interaction_met_trajectory_id` int(11) DEFAULT NULL,
+	`interaction_type` varchar(255) DEFAULT NULL,
+	`interaction_met_ant_activity` varchar(255) DEFAULT NULL,
+	PRIMARY KEY (`point_id`)
 	);
 
 The column `is_interaction` determines whether the point corresponds to a `Point` object or an `InteractionPoint` object. If this value is 1, the columns that begin with `interaction` must not be null. If this value is 0, those columns can have any value. Their values will be ignored.
 
+The `source` column must be a name of a value of the enum `org.samcrow.frameviewer.trajectory.Point.Source`.
 
 ## Future expansion ##
 
@@ -97,5 +99,3 @@ Because the databse code is databse-agnostic and uses JDBC, it could easily be a
 #### SQLite/MySQL note ####
 
 [SQLite does not like `AUTO_INCREMENT`](https://www.sqlite.org/autoinc.html). It will automatically add an incremented value to a `PRIMARY KEY` column without `AUTO_INCREMENT`. MySQL, however, requires `AUTO_INCREMENT` and will encounter an error if one attempts to `INSERT` without specifying a value for a column that is `PRIMARY KEY` but not `AUTO_INCREMENT`.
-
-
