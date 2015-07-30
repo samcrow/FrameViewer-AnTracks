@@ -17,7 +17,8 @@
  * You should have received a copy of the GNU General Public License
  * along with Trajectory.  If not, see <http://www.gnu.org/licenses/>.
  */
-// </editor-fold>package org.samcrow.frameviewer.ui.db;
+// </editor-fold>
+package org.samcrow.frameviewer.ui.db;
 
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;

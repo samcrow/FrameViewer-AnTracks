@@ -17,7 +17,8 @@
  * You should have received a copy of the GNU General Public License
  * along with Trajectory.  If not, see <http://www.gnu.org/licenses/>.
  */
-// </editor-fold>package org.samcrow.frameviewer;
+// </editor-fold>
+package org.samcrow.frameviewer;
 
 import java.util.LinkedHashMap;
 import java.util.Map.Entry;

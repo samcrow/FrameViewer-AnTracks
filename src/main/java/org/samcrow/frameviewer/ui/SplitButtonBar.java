@@ -17,7 +17,8 @@
  * You should have received a copy of the GNU General Public License
  * along with Trajectory.  If not, see <http://www.gnu.org/licenses/>.
  */
-// </editor-fold>package org.samcrow.frameviewer.ui;
+// </editor-fold>
+package org.samcrow.frameviewer.ui;
 
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
