@@ -49,7 +49,7 @@ import org.samcrow.frameviewer.trajectory.ui.FrameController;
 
 /**
  * Displays a video frame and allows it to be clicked on
- * <p>
+ * 
  * @author Sam Crow
  */
 public class FrameCanvas extends PaintableCanvas {
@@ -184,9 +184,11 @@ public class FrameCanvas extends PaintableCanvas {
 			    TrajectoryTool t, TrajectoryTool newValue) {
 				switch (newValue) {
 				    case Create:
+					editController.setActiveTrajectory(null);
 					activeController = createController;
 					break;
 				    case Edit:
+					createController.setActiveTrajectory(null);
 					activeController = editController;
 					break;
 				}
