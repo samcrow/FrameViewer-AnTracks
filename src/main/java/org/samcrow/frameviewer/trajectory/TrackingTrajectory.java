@@ -172,8 +172,22 @@ public class TrackingTrajectory<P extends Point> extends BasicTrajectory<P> {
     private void updateTracking(int startFrame, P startPos, int endFrame,
 	    P endPos) {
 	if (tracker != null) {
+	    
+	    // See if the past-end trajectory contains points from startFrame
+	    // to endFrame
+	    // If so, it can be used instead of doing the forward tracking again
+	    Trajectory<Point> pastEndCopy = null;
+	    if(pastEnd != null) {
+		if(pastEnd.getFirstFrame() <= (startFrame + 1) && pastEnd.getLastFrame() >= endFrame) {
+		    pastEndCopy = new BasicTrajectory<>(pastEnd);
+		    // Insert the last user-defined point
+		    final int lastUserFrame = this.getLastFrame();
+		    pastEndCopy.put(lastUserFrame, this.get(lastUserFrame));
+		}
+	    }
+	    
 	    Trajectory<Point> track = tracker.trackBidirectional(startPos,
-		    startFrame, endPos, endFrame);
+		    startFrame, endPos, endFrame, pastEndCopy);
 	    for (Entry<Point> entry : track) {
 		if (entry.frame > startFrame && entry.frame < endFrame) {
 		    super.put(entry.frame, pointCreator.newPoint(entry.point

@@ -41,6 +41,19 @@ public class BasicTrajectory<P> implements Trajectory<P> {
     public BasicTrajectory() {
 	map = new TreeMap<>();
     }
+    
+    /**
+     * Creates a new trajectory from another, copying the trajectory but not
+     * the points
+     * @param <P2> the point type of the other trajectory
+     * @param other the trajectory to get points from
+     */
+    public <P2 extends P> BasicTrajectory(Iterable<Trajectory.Entry<P2>> other) {
+	this();
+	for(Trajectory.Entry<P2> entry : other) {
+	    map.put(entry.frame, entry.point);
+	}
+    }
 
     @Override
     public P put(int frame, P point) {

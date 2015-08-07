@@ -146,15 +146,22 @@ public class Tracker {
      * @param start the start frame number
      * @param endPos the position of the ant in the end frame
      * @param end the end frame number
+     * @param forwards An optional trajectory containing the results of forward
+     * tracking from startFrame to endFrame. May be null. If not null, must
+     * have a first frame &lt;= start and a last frame &gt;= end.
      * @return A trajectory with start as its start frame and end as its end
      * frame, with a position of the ant included for all frames in between,
      * starting at startPos and ending at endPos
      */
     public Trajectory<Point> trackBidirectional(Point startPos,
-	    int start, Point endPos, int end) {
+	    int start, Point endPos, int end, Trajectory<Point> forwards) {
 
 	// Track forwards and backwards
-	Trajectory<? extends Point> forwards = track(startPos, start, end);
+	if(forwards == null) {
+	    forwards = track(startPos, start, end);
+	}
+	assert forwards.getFirstFrame() <= start;
+	assert forwards.getLastFrame() >= end;
 	Trajectory<? extends Point> backwards = track(endPos, end, start);
 
 	// Find the frame with the minimum squared distance between tracked points
