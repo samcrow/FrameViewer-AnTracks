@@ -259,7 +259,8 @@ public class FrameCanvas extends PaintableCanvas {
 			    imageTopLeftY, getCurrentFrame(), getDisplayMode(),
 			    false);
 		}
-		// Always draw active trajectory
+		gc.setGlobalAlpha(1);
+		// Always draw active trajectory with 100% opacity
 		final Trajectory0 active = activeController
 			.getActiveTrajectory();
 		if (active != null) {
@@ -269,7 +270,6 @@ public class FrameCanvas extends PaintableCanvas {
 			    true);
 		}
 
-		gc.setGlobalAlpha(1);
 		gc.restore();
 	    }
 	}
