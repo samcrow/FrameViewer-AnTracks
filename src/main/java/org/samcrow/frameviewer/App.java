@@ -108,6 +108,7 @@ public class App extends Application {
             // Hook up the trajectory display options
             canvas.displayModeProperty().bindBidirectional(controls.trajectoryDisplayModeProperty());
             canvas.trajectoryAlphaProperty().bindBidirectional(controls.trajectoryAlphaProperty());
+	    canvas.activeTrajectoryAlphaProperty().bindBidirectional(controls.activeTrajectoryAlphaProperty());
             // Hook up trajectory tool select
             canvas.trajectoryToolProperty().bindBidirectional(controls.trajectoryToolProperty());
             // Hook up refresh action

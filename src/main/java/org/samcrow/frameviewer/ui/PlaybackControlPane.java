@@ -42,6 +42,7 @@ import org.samcrow.frameviewer.trajectory.TrajectoryDisplayMode;
 import org.samcrow.frameviewer.trajectory.TrajectoryTool;
 
 import static javafx.scene.layout.HBox.setMargin;
+import javafx.scene.layout.VBox;
 
 /**
  * Displays playback controls
@@ -57,174 +58,195 @@ public class PlaybackControlPane extends HBox {
     private final PlaybackControlModel model;
 
     private final Button refreshButton;
-    
+
     private final ObjectProperty<TrajectoryTool> trajectoryTool = new SimpleObjectProperty<>();
-    
+
     private final ObjectProperty<TrajectoryDisplayMode> trajectoryDisplayMode = new SimpleObjectProperty<>();
-    
+
     private final DoubleProperty trajectoryAlpha = new SimpleDoubleProperty(1);
 
+    private final DoubleProperty activeTrajectoryAlpha = new SimpleDoubleProperty(
+	    1);
+
     public PlaybackControlPane(PlaybackControlModel model) {
-        this.model = model;
+	this.model = model;
 
-        final Insets PADDING = new Insets(10);
+	final Insets PADDING = new Insets(10);
 
-        setPadding(PADDING);
-        setAlignment(Pos.CENTER);
-        
-        // Refresh button
-        {
-            refreshButton = new Button("Refresh");
-            getChildren().add(refreshButton);
-            setMargin(refreshButton, PADDING);
-        }
-        
-        // Left spacer
-        {
-            final Region spacer = new Region();
-            getChildren().add(spacer);
-            setHgrow(spacer, Priority.ALWAYS);
-        }
+	setPadding(PADDING);
+	setAlignment(Pos.CENTER);
 
-        {
-            jumpBackwardsButton = new Button("|<");
-            jumpBackwardsButton.setOnAction(model.getJumpBackwardsButtonHandler());
-            jumpBackwardsButton.disableProperty().bind(model.jumpBackwardsEnabledProperty().not());
+	// Refresh button
+	{
+	    refreshButton = new Button("Refresh");
+	    getChildren().add(refreshButton);
+	    setMargin(refreshButton, PADDING);
+	}
 
-            getChildren().add(jumpBackwardsButton);
-            setMargin(jumpBackwardsButton, PADDING);
-        }
+	// Left spacer
+	{
+	    final Region spacer = new Region();
+	    getChildren().add(spacer);
+	    setHgrow(spacer, Priority.ALWAYS);
+	}
 
-        {
+	{
+	    jumpBackwardsButton = new Button("|<");
+	    jumpBackwardsButton.setOnAction(model
+		    .getJumpBackwardsButtonHandler());
+	    jumpBackwardsButton.disableProperty().bind(model
+		    .jumpBackwardsEnabledProperty().not());
 
-            final Label timeLabel = new Label("Time: ");
+	    getChildren().add(jumpBackwardsButton);
+	    setMargin(jumpBackwardsButton, PADDING);
+	}
 
-            getChildren().add(timeLabel);
-            setMargin(timeLabel, PADDING);
+	{
 
-        }
+	    final Label timeLabel = new Label("Time: ");
 
-        {
-            final TimeField timeField = new TimeField();
-            timeField.currentFrameProperty().bindBidirectional(model.currentFrameProperty());
+	    getChildren().add(timeLabel);
+	    setMargin(timeLabel, PADDING);
 
-            getChildren().add(timeField);
-            setMargin(timeField, PADDING);
-        }
+	}
 
-        {
+	{
+	    final TimeField timeField = new TimeField();
+	    timeField.currentFrameProperty().bindBidirectional(model
+		    .currentFrameProperty());
 
-            final Label frameLabel = new Label("Frame: ");
+	    getChildren().add(timeField);
+	    setMargin(timeField, PADDING);
+	}
 
-            getChildren().add(frameLabel);
-            setMargin(frameLabel, PADDING);
+	{
 
-        }
+	    final Label frameLabel = new Label("Frame: ");
 
-        {
-            final IntegerField frameField = new IntegerField(1);
-            frameField.valueProperty().bindBidirectional(model.currentFrameProperty());
+	    getChildren().add(frameLabel);
+	    setMargin(frameLabel, PADDING);
 
-            getChildren().add(frameField);
-            setMargin(frameField, PADDING);
-        }
+	}
 
-        {
-            jumpForwardButton = new Button(">|");
-            jumpForwardButton.setOnAction(model.getJumpForwardButtonHandler());
-            jumpForwardButton.disableProperty().bind(model.jumpForwardEnabledProperty().not());
+	{
+	    final IntegerField frameField = new IntegerField(1);
+	    frameField.valueProperty().bindBidirectional(model
+		    .currentFrameProperty());
 
-            getChildren().add(jumpForwardButton);
-            setMargin(jumpForwardButton, PADDING);
-        }
-        
-        // Right spacer
-        {
-            final Region spacer = new Region();
-            getChildren().add(spacer);
-            setHgrow(spacer, Priority.ALWAYS);
-        }
+	    getChildren().add(frameField);
+	    setMargin(frameField, PADDING);
+	}
 
-        // Mode select
-        {
-            
-            final SplitButtonBar<TrajectoryTool> toolChoice = new SplitButtonBar<>(TrajectoryTool.values(), TrajectoryTool.Create);
-            trajectoryTool.bindBidirectional(toolChoice.selectedItemProperty());
+	{
+	    jumpForwardButton = new Button(">|");
+	    jumpForwardButton.setOnAction(model.getJumpForwardButtonHandler());
+	    jumpForwardButton.disableProperty().bind(model
+		    .jumpForwardEnabledProperty().not());
 
-            getChildren().add(toolChoice);
-            setMargin(toolChoice, PADDING);
-        }
-        
-        // Display mode select
-        {
-            final SplitButtonBar<TrajectoryDisplayMode> displayChoice = new SplitButtonBar<>(TrajectoryDisplayMode.values(), TrajectoryDisplayMode.Full);
-            trajectoryDisplayMode.bindBidirectional(displayChoice.selectedItemProperty());
-            
-            getChildren().add(displayChoice);
-            setMargin(displayChoice, PADDING);
-        }
+	    getChildren().add(jumpForwardButton);
+	    setMargin(jumpForwardButton, PADDING);
+	}
 
-        // Trajectory opacity
-        {
-            final Slider slider = new Slider(0, 1, 1);
-            trajectoryAlpha.bindBidirectional(slider.valueProperty());
-            
-            getChildren().add(slider);
-            setMargin(slider, PADDING);
-        }
+	// Right spacer
+	{
+	    final Region spacer = new Region();
+	    getChildren().add(spacer);
+	    setHgrow(spacer, Priority.ALWAYS);
+	}
+
+	// Mode select
+	{
+
+	    final SplitButtonBar<TrajectoryTool> toolChoice = new SplitButtonBar<>(
+		    TrajectoryTool.values(), TrajectoryTool.Create);
+	    trajectoryTool.bindBidirectional(toolChoice.selectedItemProperty());
+
+	    getChildren().add(toolChoice);
+	    setMargin(toolChoice, PADDING);
+	}
+
+	// Display mode select
+	{
+	    final SplitButtonBar<TrajectoryDisplayMode> displayChoice = new SplitButtonBar<>(
+		    TrajectoryDisplayMode.values(), TrajectoryDisplayMode.Full);
+	    trajectoryDisplayMode.bindBidirectional(displayChoice
+		    .selectedItemProperty());
+
+	    getChildren().add(displayChoice);
+	    setMargin(displayChoice, PADDING);
+	}
+
+	// Trajectory opacity
+	{
+	    final Slider activeTrajectorySlider = new Slider(0, 1, 1);
+	    final Slider slider = new Slider(0, 1, 1);
+	    activeTrajectoryAlpha.bindBidirectional(activeTrajectorySlider.valueProperty());
+	    trajectoryAlpha.bindBidirectional(slider.valueProperty());
+
+	    final VBox box = new VBox(activeTrajectorySlider, slider);
+	    box.setSpacing(5);
+	    
+	    getChildren().add(box);
+	    setMargin(box, PADDING);
+	}
 
     }
-
 
     public final TrajectoryTool getTrajectoryTool() {
-        return trajectoryTool.get();
+	return trajectoryTool.get();
     }
-    
+
     public final void setTrajectoryTool(TrajectoryTool tool) {
-        trajectoryTool.set(tool);
+	trajectoryTool.set(tool);
     }
-    
+
     public final ObjectProperty<TrajectoryTool> trajectoryToolProperty() {
-        return trajectoryTool;
+	return trajectoryTool;
     }
-    
+
     public final TrajectoryDisplayMode getTrajectoryDisplayMode() {
-        return trajectoryDisplayMode.get();
+	return trajectoryDisplayMode.get();
     }
-    
+
     public final void setTrajectoryDisplayMode(TrajectoryDisplayMode mode) {
-        trajectoryDisplayMode.set(mode);
+	trajectoryDisplayMode.set(mode);
     }
-    
+
     public final ObjectProperty<TrajectoryDisplayMode> trajectoryDisplayModeProperty() {
-        return trajectoryDisplayMode;
+	return trajectoryDisplayMode;
     }
-    
+
     public final DoubleProperty trajectoryAlphaProperty() {
-        return trajectoryAlpha;
+	return trajectoryAlpha;
     }
-    
+
+    public final DoubleProperty activeTrajectoryAlphaProperty() {
+	return activeTrajectoryAlpha;
+    }
+
     public final void setOnRefreshRequested(EventHandler<ActionEvent> handler) {
-        refreshButton.setOnAction(handler);
+	refreshButton.setOnAction(handler);
     }
-    
+
     /**
      * Sets up global keyboard shortcuts. Must be called after this pane
      * is attached to a scene.
      */
     public void setupAccelerators() {
-        final Scene scene = getScene();
+	final Scene scene = getScene();
 
-        scene.getAccelerators().put(new KeyCodeCombination(KeyCode.LEFT), (Runnable) () -> {
-	    if (!jumpBackwardsButton.isDisabled()) {
-		jumpBackwardsButton.fire();
-	    }
-	});
-        scene.getAccelerators().put(new KeyCodeCombination(KeyCode.RIGHT), (Runnable) () -> {
-	    if (!jumpForwardButton.isDisabled()) {
-		jumpForwardButton.fire();
-	    }
-	});
+	scene.getAccelerators().put(new KeyCodeCombination(KeyCode.LEFT),
+		(Runnable) () -> {
+		    if (!jumpBackwardsButton.isDisabled()) {
+			jumpBackwardsButton.fire();
+		    }
+		});
+	scene.getAccelerators().put(new KeyCodeCombination(KeyCode.RIGHT),
+		(Runnable) () -> {
+		    if (!jumpForwardButton.isDisabled()) {
+			jumpForwardButton.fire();
+		    }
+		});
     }
 
 }

@@ -89,6 +89,8 @@ public class FrameCanvas extends PaintableCanvas {
 	    TrajectoryDisplayMode.Full);
 
     private final DoubleProperty trajectoryAlpha = new SimpleDoubleProperty(1);
+    
+    private final DoubleProperty activeTrajectoryAlpha = new SimpleDoubleProperty(1);
 
     private DatabaseTrajectoryDataStore dataStore;
 
@@ -136,6 +138,19 @@ public class FrameCanvas extends PaintableCanvas {
 	    }
 	});
 	trajectoryAlpha.addListener(new InvalidationListener() {
+	    @Override
+	    public void invalidated(Observable o) {
+
+		// Update trajectories 
+		if (dataStore != null) {
+		    trajectories.set(dataStore.getObjectsNearCurrentFrame(20));
+		}
+
+		requestFocus();
+		repaint();
+	    }
+	});
+	activeTrajectoryAlpha.addListener(new InvalidationListener() {
 	    @Override
 	    public void invalidated(Observable o) {
 
@@ -254,13 +269,17 @@ public class FrameCanvas extends PaintableCanvas {
 
 		// Draw trajectories
 		for (Trajectory0 trajectory : trajectories.get()) {
+		    // But do not draw active trajectory
+		    if(activeController.getActiveTrajectory() == trajectory) {
+			continue;
+		    }
 		    trajectory.paint(gc, image.get().getWidth(), image.get()
 			    .getHeight(), imageWidth, imageHeight, imageTopLeftX,
 			    imageTopLeftY, getCurrentFrame(), getDisplayMode(),
 			    false);
 		}
-		gc.setGlobalAlpha(1);
-		// Always draw active trajectory with 100% opacity
+		// Draw active trajectory with the requested opacity
+		gc.setGlobalAlpha(activeTrajectoryAlpha.get());
 		final Trajectory0 active = activeController
 			.getActiveTrajectory();
 		if (active != null) {
@@ -269,6 +288,7 @@ public class FrameCanvas extends PaintableCanvas {
 			    imageTopLeftY, getCurrentFrame(), getDisplayMode(),
 			    true);
 		}
+		gc.setGlobalAlpha(1);
 
 		gc.restore();
 	    }
@@ -396,6 +416,9 @@ public class FrameCanvas extends PaintableCanvas {
 
     public final DoubleProperty trajectoryAlphaProperty() {
 	return trajectoryAlpha;
+    }
+    public final DoubleProperty activeTrajectoryAlphaProperty() {
+	return activeTrajectoryAlpha;
     }
 
     private static ObjectProperty<List<Trajectory0>> createTrajectoriesProperty() {
