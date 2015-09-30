@@ -30,6 +30,7 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import javax.sql.DataSource;
 import org.samcrow.frameviewer.MultiFrameDataStore;
 import org.samcrow.frameviewer.trajectory.InteractionPoint;
 import org.samcrow.frameviewer.trajectory.InteractionType;
@@ -46,25 +47,27 @@ import org.samcrow.frameviewer.trajectory.Trajectory0;
 public class DatabaseTrajectoryDataStore extends MultiFrameDataStore<Trajectory0> implements
 	Closeable, AutoCloseable {
 
-    private final Connection connection;
+    private final DataSource source;
     private final String pointsTableName;
     private final String trajectoriesTableName;
 
-    public DatabaseTrajectoryDataStore(Connection connection,
+    public DatabaseTrajectoryDataStore(DataSource source,
 	    String pointsTableName, String trajectoriesTableName) throws SQLException {
-	this.connection = connection;
+	this.source = source;
 	this.pointsTableName = pointsTableName;
 	this.trajectoriesTableName = trajectoriesTableName;
 	checkSchema();
 
-	try (ResultSet trajectories = selectTrajectories()) {
-	    while (trajectories.next()) {
+	try (final Connection connection = source.getConnection()) {
+	    try (ResultSet trajectories = selectTrajectories(connection)) {
+		while (trajectories.next()) {
 
-		final Trajectory0 trajectory = createTrajectoryAndPoints(
-			trajectories);
-		if (trajectory != null) {
-		    // Add this trajectory to the instance's list
-		    data.add(trajectory);
+		    final Trajectory0 trajectory = createTrajectoryAndPoints(
+			    trajectories);
+		    if (trajectory != null) {
+			// Add this trajectory to the instance's list
+			data.add(trajectory);
+		    }
 		}
 	    }
 	}
@@ -78,124 +81,143 @@ public class DatabaseTrajectoryDataStore extends MultiFrameDataStore<Trajectory0
      * @throws java.io.IOException
      */
     public void refresh() throws IOException {
-	try (ResultSet trajectories = selectTrajectories()) {
+	try (final Connection connection = source.getConnection()) {
+	    try (ResultSet trajectories = selectTrajectories(connection)) {
 
-	    final List<Trajectory0> updated = new ArrayList<>();
+		final List<Trajectory0> updated = new ArrayList<>();
 
-	    while (trajectories.next()) {
-		final Trajectory0 existingTrajectory = findTrajectoryById(
-			trajectories.getInt("trajectory_id"));
+		while (trajectories.next()) {
+		    final Trajectory0 existingTrajectory = findTrajectoryById(
+			    trajectories.getInt("trajectory_id"));
 
-		if (existingTrajectory != null) {
-		    // Propagate properties from the database trajectory to the existing one
+		    if (existingTrajectory != null) {
+			// Propagate properties from the database trajectory to the existing one
 
-		    existingTrajectory.setFromAction(Trajectory0.FromAction
-			    .safeValueOf(trajectories.getString("from_action")));
-		    existingTrajectory.setToAction(Trajectory0.ToAction
-			    .safeValueOf(trajectories.getString("to_action")));
+			existingTrajectory.setFromAction(Trajectory0.FromAction
+				.safeValueOf(trajectories.getString(
+						"from_action")));
+			existingTrajectory.setToAction(Trajectory0.ToAction
+				.safeValueOf(trajectories.getString("to_action")));
 
-		    // Points
-		    try (ResultSet points = selectPointsInTrajectory(
-			    existingTrajectory.getId())) {
-			while (points.next()) {
-			    final int frame = points.getInt("frame_number");
-			    final Point0 existingPoint = existingTrajectory.get(
-				    frame);
-			    if (existingPoint != null) {
-				// Update this point
-				existingPoint.setActivity(Point0.Activity
-					.valueOf(points.getString("activity")));
-				existingPoint.setX(points.getInt("frame_x"));
-				existingPoint.setY(points.getInt("frame_y"));
+			// Points
+			try (ResultSet points = selectPointsInTrajectory(
+				connection,
+				existingTrajectory.getId())) {
+			    while (points.next()) {
+				final int frame = points.getInt("frame_number");
+				final Point0 existingPoint = existingTrajectory
+					.get(
+						frame);
+				if (existingPoint != null) {
+				    // Update this point
+				    existingPoint.setActivity(Point0.Activity
+					    .valueOf(points
+						    .getString("activity")));
+				    existingPoint.setX(points.getInt("frame_x"));
+				    existingPoint.setY(points.getInt("frame_y"));
 
-				if (existingPoint instanceof InteractionPoint) {
-				    final InteractionPoint iPoint = (InteractionPoint) existingPoint;
+				    if (existingPoint instanceof InteractionPoint) {
+					final InteractionPoint iPoint = (InteractionPoint) existingPoint;
 
-				    // Check if the point should be preserved as an interaction point
-				    if (points.getBoolean("is_interaction")) {
+					// Check if the point should be preserved as an interaction point
+					if (points.getBoolean("is_interaction")) {
 
-					iPoint.setType(InteractionType.valueOf(
-						points.getString(
-							"interaction_type")));
-					iPoint.setMetAntActivity(Point0.Activity
-						.valueOf(points.getString(
-								"interaction_met_ant_activity")));
-					iPoint.setMetAntId(points.getInt(
-						"interaction_met_trajectory_id"));
-				    } else {
-					demoteFromInteraction(iPoint, frame, existingTrajectory.getId());
+					    iPoint.setType(InteractionType
+						    .valueOf(
+							    points.getString(
+								    "interaction_type")));
+					    iPoint.setMetAntActivity(
+						    Point0.Activity
+						    .valueOf(points.getString(
+								    "interaction_met_ant_activity")));
+					    iPoint.setMetAntId(points.getInt(
+						    "interaction_met_trajectory_id"));
+					}
+					else {
+					    demoteFromInteraction(iPoint, frame,
+						    existingTrajectory.getId());
+					}
 				    }
-				} else {
-				    // Not an interaction point
-				    // Check if it should be promoted
-				    if (points.getBoolean("is_interaction")) {
-					// Promote
-					final InteractionPoint iPoint = new InteractionPoint(
-						existingPoint);
-					iPoint.setType(InteractionType.valueOf(
-						points.getString(
-							"interaction_type")));
-					iPoint.setMetAntActivity(Point0.Activity
-						.valueOf(points.getString(
-								"interaction_met_ant_activity")));
-					iPoint.setMetAntId(points.getInt(
-						"interaction_met_trajectory_id"));
-					// Put the promoted point into the trajectory
-					existingTrajectory.put(frame, iPoint);
+				    else {
+					// Not an interaction point
+					// Check if it should be promoted
+					if (points.getBoolean("is_interaction")) {
+					    // Promote
+					    final InteractionPoint iPoint = new InteractionPoint(
+						    existingPoint);
+					    iPoint.setType(InteractionType
+						    .valueOf(
+							    points.getString(
+								    "interaction_type")));
+					    iPoint.setMetAntActivity(
+						    Point0.Activity
+						    .valueOf(points.getString(
+								    "interaction_met_ant_activity")));
+					    iPoint.setMetAntId(points.getInt(
+						    "interaction_met_trajectory_id"));
+					    // Put the promoted point into the trajectory
+					    existingTrajectory
+						    .put(frame, iPoint);
+					}
 				    }
+
 				}
-
-			    } else {
-				// Add a point
-				existingTrajectory.put(frame,
-					pointFromResultSet(points));
+				else {
+				    // Add a point
+				    existingTrajectory.put(frame,
+					    pointFromResultSet(points));
+				}
 			    }
 			}
-		    }
 
-		    // Mark the trajectory updated
-		    updated.add(existingTrajectory);
-		} else {
-		    // Create a new trajectory
-		    final Trajectory0 trajectory = createTrajectoryAndPoints(
-			    trajectories);
-		    if (trajectory != null) {
-			updated.add(trajectory);
+			// Mark the trajectory updated
+			updated.add(existingTrajectory);
+		    }
+		    else {
+			// Create a new trajectory
+			final Trajectory0 trajectory = createTrajectoryAndPoints(
+				trajectories);
+			if (trajectory != null) {
+			    updated.add(trajectory);
+			}
 		    }
 		}
+
+		// Clear the existing data and put the updated trajectories in
+		data.clear();
+		data.addAll(updated);
+
+		// Indicate that this object has changed
+		fireValueChangedEvent();
 	    }
-
-	    // Clear the existing data and put the updated trajectories in
-	    data.clear();
-	    data.addAll(updated);
-
-	    // Indicate that this object has changed
-	    fireValueChangedEvent();
 	} catch (SQLException ex) {
 	    throw new IOException(ex);
 	}
     }
 
     private void checkSchema() throws SQLException {
-	DatabaseMetaData dbData = connection.getMetaData();
-	ResultSet tableResults = dbData.getTables(connection.getCatalog(), null,
-		null, null);
+	try (final Connection connection = source.getConnection()) {
+	    DatabaseMetaData dbData = connection.getMetaData();
+	    ResultSet tableResults = dbData.getTables(connection.getCatalog(),
+		    null,
+		    null, null);
 
-	boolean hasTrajectories = false;
-	boolean hasPoints = false;
+	    boolean hasTrajectories = false;
+	    boolean hasPoints = false;
 
-	while (tableResults.next()) {
-	    final String tableName = tableResults.getString("TABLE_NAME");
-	    if (tableName.equals(trajectoriesTableName)) {
-		hasTrajectories = true;
+	    while (tableResults.next()) {
+		final String tableName = tableResults.getString("TABLE_NAME");
+		if (tableName.equals(trajectoriesTableName)) {
+		    hasTrajectories = true;
+		}
+		if (tableName.equals(pointsTableName)) {
+		    hasPoints = true;
+		}
 	    }
-	    if (tableName.equals(pointsTableName)) {
-		hasPoints = true;
-	    }
-	}
 
-	if (!hasPoints && !hasTrajectories) {
-	    setUpSchema();
+	    if (!hasPoints && !hasTrajectories) {
+		setUpSchema();
+	    }
 	}
     }
 
@@ -206,50 +228,59 @@ public class DatabaseTrajectoryDataStore extends MultiFrameDataStore<Trajectory0
 	final Trajectory0.ToAction endAction = Trajectory0.ToAction.safeValueOf(
 		trajectories.getString("to_action"));
 
-	try (ResultSet points = selectPointsInTrajectory(trajectoryId)) {
+	try (final Connection connection = source.getConnection()) {
+	    try (ResultSet points = selectPointsInTrajectory(connection,
+		    trajectoryId)) {
 
-	    Trajectory0 trajectory;
-	    // Get the first point. Because the query involved an ORDER BY frame_number request,
-	    // this point must have the lowest frame number.
-	    if (points.next()) {
-		final Point0 firstPoint = pointFromResultSet(points);
-		final int firstPointFrame = points.getInt("frame_number");
-		trajectory = new Trajectory0(null);
-		trajectory.setFromAction(startAction);
-		trajectory.setToAction(endAction);
-		trajectory.setDataStore(this);
-		trajectory.setId(trajectoryId);
+		Trajectory0 trajectory;
+		// Get the first point. Because the query involved an ORDER BY frame_number request,
+		// this point must have the lowest frame number.
+		if (points.next()) {
+		    final Point0 firstPoint = pointFromResultSet(points);
+		    final int firstPointFrame = points.getInt("frame_number");
+		    trajectory = new Trajectory0(null);
+		    trajectory.setFromAction(startAction);
+		    trajectory.setToAction(endAction);
+		    trajectory.setDataStore(this);
+		    trajectory.setId(trajectoryId);
 
-		trajectory.put(firstPointFrame, firstPoint);
-	    } else {
-		System.err.println("Got a trajectory with ID " + trajectoryId
-			+ " that does not have any points. This trajectory will be deleted.");
-		deleteTrajectoryFromDatabaseOnly(trajectoryId);
-		return null;
+		    trajectory.put(firstPointFrame, firstPoint);
+		}
+		else {
+		    System.err.println("Got a trajectory with ID "
+			    + trajectoryId
+			    + " that does not have any points. This trajectory will be deleted.");
+		    deleteTrajectoryFromDatabaseOnly(trajectoryId);
+		    return null;
+		}
+
+		while (points.next()) {
+		    final Point0 point = pointFromResultSet(points);
+		    final int frame = points.getInt("frame_number");
+		    trajectory.put(frame, point);
+		}
+		return trajectory;
 	    }
-
-	    while (points.next()) {
-		final Point0 point = pointFromResultSet(points);
-		final int frame = points.getInt("frame_number");
-		trajectory.put(frame, point);
-	    }
-	    return trajectory;
 	}
     }
 
-    private ResultSet selectTrajectories() throws SQLException {
+    private ResultSet selectTrajectories(Connection connection) throws SQLException {
 	return connection.createStatement().executeQuery("SELECT * FROM `"
 		+ trajectoriesTableName + "` ORDER BY `trajectory_id`");
     }
 
-    private ResultSet selectOneTrajectory(int trajectoryId) throws SQLException {
+    private ResultSet selectOneTrajectory(Connection connection,
+	    int trajectoryId) throws SQLException {
 	return connection.createStatement().executeQuery("SELECT * FROM `"
 		+ trajectoriesTableName + "` WHERE `trajectory_id`="
 		+ trajectoryId + " LIMIT 1");
     }
 
-    private ResultSet selectPointsInTrajectory(int trajectoryId) throws SQLException {
-        return connection.createStatement().executeQuery("SELECT * FROM `" + pointsTableName + "` WHERE `trajectory_id`=" + trajectoryId + " ORDER BY `frame_number`,`is_interaction`");
+    private ResultSet selectPointsInTrajectory(Connection connection,
+	    int trajectoryId) throws SQLException {
+	return connection.createStatement().executeQuery("SELECT * FROM `"
+		+ pointsTableName + "` WHERE `trajectory_id`="
+		+ trajectoryId + " ORDER BY `frame_number`,`is_interaction`");
     }
 
     /**
@@ -259,11 +290,14 @@ public class DatabaseTrajectoryDataStore extends MultiFrameDataStore<Trajectory0
      * @throws java.sql.SQLException
      */
     public void persistTrajectory(Trajectory0 trajectory) throws SQLException {
-	try (ResultSet existing = selectOneTrajectory(trajectory.getId())) {
+	try (final Connection connection = source.getConnection();
+		ResultSet existing = selectOneTrajectory(connection, trajectory
+			.getId())) {
 	    if (existing.next()) {
 		// A trajectory already exists
 		updateTrajectory(trajectory);
-	    } else {
+	    }
+	    else {
 		// No trajectory already exists
 		insertTrajectory(trajectory);
 	    }
@@ -277,7 +311,8 @@ public class DatabaseTrajectoryDataStore extends MultiFrameDataStore<Trajectory0
      * @throws java.sql.SQLException
      */
     private void updateTrajectory(Trajectory0 trajectory) throws SQLException {
-	try (Statement statement = connection.createStatement()) {
+	try (final Connection connection = source.getConnection();
+		Statement statement = connection.createStatement()) {
 	    statement.executeUpdate("UPDATE `" + trajectoriesTableName
 		    + "` SET "
 		    + "`from_action` = '" + trajectory.getFromAction().name()
@@ -294,7 +329,8 @@ public class DatabaseTrajectoryDataStore extends MultiFrameDataStore<Trajectory0
     }
 
     private void insertTrajectory(Trajectory0 trajectory) throws SQLException {
-	try (Statement statement = connection.createStatement()) {
+	try (final Connection connection = source.getConnection();
+		Statement statement = connection.createStatement()) {
 	    statement.executeUpdate("INSERT INTO `" + trajectoriesTableName
 		    + "` ("
 		    + "`trajectory_id`, "
@@ -308,7 +344,8 @@ public class DatabaseTrajectoryDataStore extends MultiFrameDataStore<Trajectory0
 
 	    // Points: It is safe to assume that no points with this trajectory exist
 	    for (Entry<Point0> entry : trajectory) {
-		insertPoint(entry.point, entry.frame, trajectory.getId());
+		insertPoint(connection, entry.point, entry.frame, trajectory
+			.getId());
 	    }
 	}
     }
@@ -321,7 +358,8 @@ public class DatabaseTrajectoryDataStore extends MultiFrameDataStore<Trajectory0
     }
 
     private void deleteTrajectoryFromDatabaseOnly(int trajectoryId) throws SQLException {
-	try (Statement statement = connection.createStatement()) {
+	try (final Connection connection = source.getConnection();
+		Statement statement = connection.createStatement()) {
 	    statement.executeUpdate("DELETE FROM `" + pointsTableName
 		    + "` WHERE `trajectory_id`=" + trajectoryId);
 	    // Then delete the trajectory
@@ -331,7 +369,8 @@ public class DatabaseTrajectoryDataStore extends MultiFrameDataStore<Trajectory0
     }
 
     public void deletePoint(int trajectoryId, int frame) throws SQLException {
-	try (Statement statement = connection.createStatement()) {
+	try (final Connection connection = source.getConnection();
+		Statement statement = connection.createStatement()) {
 	    statement.executeUpdate("DELETE FROM `" + pointsTableName
 		    + "` WHERE `trajectory_id` = " + trajectoryId
 		    + " AND `frame_number` = " + frame);
@@ -339,7 +378,8 @@ public class DatabaseTrajectoryDataStore extends MultiFrameDataStore<Trajectory0
     }
 
     public void persistPoint(Point0 point, int frame, int trajectoryId) throws SQLException {
-	try (Statement statement = connection.createStatement()) {
+	try (final Connection connection = source.getConnection();
+		Statement statement = connection.createStatement()) {
 	    try (ResultSet existingPoint
 		    = statement.executeQuery(
 			    "SELECT * FROM `" + pointsTableName
@@ -347,15 +387,17 @@ public class DatabaseTrajectoryDataStore extends MultiFrameDataStore<Trajectory0
 			    + trajectoryId + " AND `frame_number` = " + frame)) {
 			if (existingPoint.next()) {
 			    updatePoint(point, frame, trajectoryId);
-			} else {
-			    insertPoint(point, frame, trajectoryId);
+			}
+			else {
+			    insertPoint(connection, point, frame, trajectoryId);
 			}
 		    }
 	}
     }
 
     private void updatePoint(Point0 point, int frame, int trajectoryId) throws SQLException {
-	try (Statement statement = connection.createStatement()) {
+	try (final Connection connection = source.getConnection();
+		Statement statement = connection.createStatement()) {
 	    if (point instanceof InteractionPoint) {
 		InteractionPoint iPoint = (InteractionPoint) point;
 		statement.executeUpdate("UPDATE `" + pointsTableName + "` SET "
@@ -372,7 +414,8 @@ public class DatabaseTrajectoryDataStore extends MultiFrameDataStore<Trajectory0
 			.getMetAntActivity().name() + '\''
 			+ " WHERE  `trajectory_id` = " + trajectoryId
 			+ " AND `frame_number` = " + frame);
-	    } else {
+	    }
+	    else {
 		statement.executeUpdate("UPDATE `" + pointsTableName + "` SET "
 			+ "`frame_x` = " + point.getX() + ','
 			+ "`frame_y` = " + point.getY() + ','
@@ -395,7 +438,8 @@ public class DatabaseTrajectoryDataStore extends MultiFrameDataStore<Trajectory0
      */
     private void demoteFromInteraction(InteractionPoint point, int frame,
 	    int trajectoryId) throws SQLException {
-	try (Statement statement = connection.createStatement()) {
+	try (final Connection connection = source.getConnection();
+		Statement statement = connection.createStatement()) {
 	    statement.executeUpdate("UPDATE `" + pointsTableName + "` SET"
 		    + "`is_interaction` = 0"
 		    + " WHERE  `trajectory_id` = " + trajectoryId
@@ -403,7 +447,8 @@ public class DatabaseTrajectoryDataStore extends MultiFrameDataStore<Trajectory0
 	}
     }
 
-    private void insertPoint(Point0 point, int frame, int trajectoryId) throws SQLException {
+    private void insertPoint(Connection connection, Point0 point, int frame,
+	    int trajectoryId) throws SQLException {
 	try (Statement statement = connection.createStatement()) {
 	    if (point instanceof InteractionPoint) {
 		InteractionPoint iPoint = (InteractionPoint) point;
@@ -433,7 +478,8 @@ public class DatabaseTrajectoryDataStore extends MultiFrameDataStore<Trajectory0
 			+ '\'' + iPoint.getMetAntActivity().name() + '\''
 			+ ")");
 
-	    } else {
+	    }
+	    else {
 		final String query = "INSERT INTO `" + pointsTableName + "` ("
 			+ "`trajectory_id`,"
 			+ "`frame_number`,"
@@ -456,7 +502,8 @@ public class DatabaseTrajectoryDataStore extends MultiFrameDataStore<Trajectory0
     }
 
     private void setUpSchema() throws SQLException {
-	try (Statement statement = connection.createStatement()) {
+	try (final Connection connection = source.getConnection();
+		Statement statement = connection.createStatement()) {
 	    statement.executeUpdate("DROP TABLE IF EXISTS `"
 		    + trajectoriesTableName + "`");
 	    statement.executeUpdate("CREATE TABLE `" + trajectoriesTableName
@@ -498,7 +545,8 @@ public class DatabaseTrajectoryDataStore extends MultiFrameDataStore<Trajectory0
 	    ((InteractionPoint) point).setMetAntActivity(Point0.Activity
 		    .safeValueOf(result
 			    .getString("interaction_met_ant_activity")));
-	} else {
+	}
+	else {
 	    point = new Point0(result.getInt("frame_x"), result
 		    .getInt("frame_y"), Source.User); // TODO: Get source
 	}
@@ -513,11 +561,8 @@ public class DatabaseTrajectoryDataStore extends MultiFrameDataStore<Trajectory0
 
     @Override
     public void close() throws IOException {
-	try {
-	    connection.close();
-	} catch (SQLException ex) {
-	    throw new IOException(ex);
-	}
+	// Can't close just a DataSource
+	// Do nothing for now
     }
 
     /**
@@ -536,16 +581,19 @@ public class DatabaseTrajectoryDataStore extends MultiFrameDataStore<Trajectory0
 		key, (Trajectory0 o1, Trajectory0 o2) -> {
 		    if (o1.getId() < o2.getId()) {
 			return -1;
-		    } else if (o1.getId() > o2.getId()) {
+		    }
+		    else if (o1.getId() > o2.getId()) {
 			return 1;
-		    } else {
+		    }
+		    else {
 			return 0;
 		    }
 		});
 
 	if (foundIndex >= 0) {
 	    return data.get(foundIndex);
-	} else {
+	}
+	else {
 	    return null;
 	}
     }
@@ -581,11 +629,13 @@ public class DatabaseTrajectoryDataStore extends MultiFrameDataStore<Trajectory0
 					iPoint.setOtherPoint(
 						(InteractionPoint) matchingPoint);
 
-				    } else {
+				    }
+				    else {
 					// Point not an InteractionPoint
 					// Do nothing
 				    }
-				} else {
+				}
+				else {
 				    // No point
 				    // Do nothing
 				}
@@ -593,7 +643,8 @@ public class DatabaseTrajectoryDataStore extends MultiFrameDataStore<Trajectory0
 				// No point
 				// Do nothing
 			    }
-			} else {
+			}
+			else {
 			    // No trajectory
 			    // Do nothing
 			}

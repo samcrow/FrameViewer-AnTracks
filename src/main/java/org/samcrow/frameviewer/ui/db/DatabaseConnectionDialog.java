@@ -20,6 +20,7 @@
 // </editor-fold>
 package org.samcrow.frameviewer.ui.db;
 
+import com.mchange.v2.c3p0.ComboPooledDataSource;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
@@ -34,6 +35,7 @@ import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
+import javax.sql.DataSource;
 import jfxtras.labs.dialogs.MonologFX;
 import org.apache.commons.lang.exception.ExceptionUtils;
 
@@ -53,7 +55,7 @@ public class DatabaseConnectionDialog extends Stage {
 
     private final Button nextButton = new Button("Next");
 
-    private Connection connection = null;
+    private DataSource source = null;
 
     private boolean success = false;
     private String pointsTableName;
@@ -110,10 +112,17 @@ public class DatabaseConnectionDialog extends Stage {
 	    final String url = "jdbc:" + connectionTypeName + "://"
 		    + connectionView.getAddress() + "/"
 		    + connectionView.getDatabase();
-	    connection = DriverManager
-		    .getConnection(url,
-			    connectionView.getUsername(),
-			    connectionView.getPassword());
+	    
+	    ComboPooledDataSource source = new ComboPooledDataSource();
+	    source.setDriverClass("com.mysql.jdbc.Driver");
+	    source.setJdbcUrl(url);
+	    source.setUser(connectionView.getUsername());
+	    source.setPassword(connectionView.getPassword());
+	    
+	    source.setUnreturnedConnectionTimeout(60);
+	    source.setDebugUnreturnedConnectionStackTraces(true);
+	    
+	    this.source = source;
 
 	    switchToDataSetSelection();
 
@@ -133,10 +142,11 @@ public class DatabaseConnectionDialog extends Stage {
 	    showDialog("Data set required", "Please enter a data set name");
 	    return;
 	}
+	try (final Connection connection = source.getConnection()) {
 	try {
 	    pointsTableName = dataSetName + "_points";
 	    trajectoriesTableName = dataSetName + "_trajectories";
-
+	    
 	    // Verify that the tables exist
 	    try (ResultSet tables = connection.getMetaData().getTables(
 		    connection.getCatalog(), null, pointsTableName, null)) {
@@ -180,11 +190,15 @@ public class DatabaseConnectionDialog extends Stage {
 			+ "\nTry using a name containing only letters, numbers, and underscores that does not start with a number..");
 	    }
 	}
+	}
+	catch (SQLException e) {
+	    showDialog("Could not connect to database", e.getMessage());
+	}
     }
 
     private void switchToDataSetSelection() {
 	try {
-	    selectionView = new DataSetSelectionView(connection);
+	    selectionView = new DataSetSelectionView(source);
 	    root.getChildren().set(0, selectionView);
 	    connectionView = null;
 
@@ -219,11 +233,11 @@ public class DatabaseConnectionDialog extends Stage {
 	dialog.setMessage(body);
 	dialog.showDialog();
     }
-
-    public Connection getConnection() {
-	return connection;
+    
+    public DataSource getDataSource() {
+	return source;
     }
-
+    
     public boolean succeeded() {
 	return success;
     }

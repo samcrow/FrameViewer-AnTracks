@@ -90,7 +90,7 @@ public class App extends Application {
                 stop();
             }
             
-            trajectoryDataStore = new DatabaseTrajectoryDataStore(dialog.getConnection(), dialog.getPointsTableName(), dialog.getTrajectoriesTableName());
+            trajectoryDataStore = new DatabaseTrajectoryDataStore(dialog.getDataSource(), dialog.getPointsTableName(), dialog.getTrajectoriesTableName());
             FrameFinder finder = new FrameFinder(frameDir);
             model = new DataStoringPlaybackControlModel(finder, trajectoryDataStore);
 
@@ -150,16 +150,6 @@ public class App extends Application {
 
     private MenuBar createMenuBar() {
         MenuBar bar = new MenuBar();
-
-        final Menu fileMenu = new Menu("File");
-
-        final MenuItem openItem = new MenuItem("Open...");
-        openItem.setAccelerator(KeyCombination.keyCombination("Shortcut+O"));
-        openItem.setOnAction((ActionEvent t) -> {
-	    // TODO
-	});
-
-        fileMenu.getItems().add(openItem);
 
         return bar;
     }
