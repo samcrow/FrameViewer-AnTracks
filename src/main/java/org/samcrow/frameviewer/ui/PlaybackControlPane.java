@@ -179,8 +179,7 @@ public class PlaybackControlPane extends HBox {
 	    trajectoryDisplayMode.bindBidirectional(displayChoice
 		    .selectedItemProperty());
 
-	    getChildren().add(displayChoice);
-	    setMargin(displayChoice, PADDING);
+	    // Not in user interface
 	}
 
 	// Trajectory opacity
