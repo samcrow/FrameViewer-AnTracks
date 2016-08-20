@@ -20,6 +20,8 @@
 // </editor-fold>
 package org.samcrow.frameviewer.trajectory;
 
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.samcrow.frameviewer.track.Tracker;
 
 /**
@@ -172,29 +174,33 @@ public class TrackingTrajectory<P extends Point> extends BasicTrajectory<P> {
     private void updateTracking(int startFrame, P startPos, int endFrame,
 	    P endPos) {
 	if (tracker != null) {
-	    
-	    // See if the past-end trajectory contains points from startFrame
-	    // to endFrame
-	    // If so, it can be used instead of doing the forward tracking again
-	    Trajectory<Point> pastEndCopy = null;
-	    if(pastEnd != null) {
-		if(pastEnd.getFirstFrame() <= (startFrame + 1) && pastEnd.getLastFrame() >= endFrame) {
-		    pastEndCopy = new BasicTrajectory<>(pastEnd);
-		    // Insert the last user-defined point
-		    final int lastUserFrame = this.getLastFrame();
-		    pastEndCopy.put(lastUserFrame, this.get(lastUserFrame));
+	    try {
+		// See if the past-end trajectory contains points from startFrame
+		// to endFrame
+		// If so, it can be used instead of doing the forward tracking again
+		Trajectory<Point> pastEndCopy = null;
+		if(pastEnd != null) {
+		    if(pastEnd.getFirstFrame() <= (startFrame + 1) && pastEnd.getLastFrame() >= endFrame) {
+			pastEndCopy = new BasicTrajectory<>(pastEnd);
+			// Insert the last user-defined point
+			final int lastUserFrame = this.getLastFrame();
+			pastEndCopy.put(lastUserFrame, this.get(lastUserFrame));
+		    }
 		}
-	    }
-	    
-	    Trajectory<Point> track = tracker.trackBidirectional(startPos,
-		    startFrame, endPos, endFrame, pastEndCopy);
-	    for (Entry<Point> entry : track) {
-		if (entry.frame > startFrame && entry.frame < endFrame) {
-		    super.put(entry.frame, pointCreator.newPoint(entry.point
-			    .getX(),
-			    entry.point.getY(), Point.Source.Tracking,
-			    startPos, endPos));
+		
+		Trajectory<Point> track = tracker.trackBidirectional(startPos,
+			startFrame, endPos, endFrame, pastEndCopy);
+		for (Entry<Point> entry : track) {
+		    if (entry.frame > startFrame && entry.frame < endFrame) {
+			super.put(entry.frame, pointCreator.newPoint(entry.point
+				.getX(),
+				entry.point.getY(), Point.Source.Tracking,
+				startPos, endPos));
+		    }
 		}
+	    } catch (Exception ex) {
+		Logger.getLogger(TrackingTrajectory.class.getName())
+			.log(Level.SEVERE, "Failed to get frames for tracking", ex);
 	    }
 	}
     }
@@ -265,28 +271,33 @@ public class TrackingTrajectory<P extends Point> extends BasicTrajectory<P> {
      */
     private void updatePastEnd(int frameTo) {
 	if (tracker != null) {
-	    if (pastEnd == null) {
-		pastEnd = new BasicTrajectory<>();
-		pastEnd.put(getLastFrame(), get(getLastFrame()));
-	    }
-	    // Add lastFrame + 1 to the past end trajectory
-	    final int lastFrame = pastEnd.getLastFrame();
-	    final P lastPoint = pastEnd.get(lastFrame);
-	    if(lastFrame >= frameTo) {
-		return;
-	    }
-	    
-	    P onePastEnd = newPoint(tracker.trackOne(lastPoint, lastFrame,
-		    lastFrame + 1), lastPoint, null);
-	    pastEnd.put(lastFrame + 1, onePastEnd);
-
-	    P previousPoint = onePastEnd;
-	    for (int frame = lastFrame + 2; frame <= frameTo; frame++) {
-		P currentPoint = newPoint(tracker.trackOne(previousPoint,
-			frame - 1, frame), lastPoint, null);
-		pastEnd.put(frame, currentPoint);
-
-		previousPoint = currentPoint;
+	    try {
+		if (pastEnd == null) {
+		    pastEnd = new BasicTrajectory<>();
+		    pastEnd.put(getLastFrame(), get(getLastFrame()));
+		}
+		// Add lastFrame + 1 to the past end trajectory
+		final int lastFrame = pastEnd.getLastFrame();
+		final P lastPoint = pastEnd.get(lastFrame);
+		if(lastFrame >= frameTo) {
+		    return;
+		}
+		
+		P onePastEnd = newPoint(tracker.trackOne(lastPoint, lastFrame,
+			lastFrame + 1), lastPoint, null);
+		pastEnd.put(lastFrame + 1, onePastEnd);
+		
+		P previousPoint = onePastEnd;
+		for (int frame = lastFrame + 2; frame <= frameTo; frame++) {
+		    P currentPoint = newPoint(tracker.trackOne(previousPoint,
+			    frame - 1, frame), lastPoint, null);
+		    pastEnd.put(frame, currentPoint);
+		    
+		    previousPoint = currentPoint;
+		}
+	    } catch (Exception ex) {
+		Logger.getLogger(TrackingTrajectory.class.getName())
+			.log(Level.SEVERE, null, ex);
 	    }
 	}
     }

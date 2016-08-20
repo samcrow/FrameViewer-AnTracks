@@ -20,8 +20,6 @@
 // </editor-fold>
 package org.samcrow.frameviewer;
 
-import javafx.scene.image.Image;
-
 /**
  * A caching adapter for a FrameSource
  * @author samcrow
