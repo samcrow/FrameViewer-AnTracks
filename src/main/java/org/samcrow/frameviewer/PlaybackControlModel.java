@@ -65,9 +65,9 @@ public class PlaybackControlModel implements CurrentFrameProvider {
     /**
      * Loads frames
      */
-    private final FrameFinder finder;
+    private final FrameSource finder;
     
-    public PlaybackControlModel(FrameFinder frameFinder) {
+    public PlaybackControlModel(FrameSource frameFinder) {
         this.finder = frameFinder;
         
         currentFrame.addListener(new ChangeListener<Number>() {

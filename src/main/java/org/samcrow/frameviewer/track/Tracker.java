@@ -23,6 +23,7 @@ package org.samcrow.frameviewer.track;
 import javafx.scene.image.Image;
 import org.samcrow.frameviewer.FrameFinder;
 import org.samcrow.frameviewer.FrameIndexOutOfBoundsException;
+import org.samcrow.frameviewer.FrameSource;
 import org.samcrow.frameviewer.trajectory.BasicTrajectory;
 import org.samcrow.frameviewer.trajectory.Point;
 import org.samcrow.frameviewer.trajectory.Point.Source;
@@ -45,9 +46,9 @@ public class Tracker {
     /**
      * The source of frames
      */
-    private final FrameFinder frameSource;
+    private final FrameSource frameSource;
 
-    public Tracker(FrameFinder frameSource, Config config) {
+    public Tracker(FrameSource frameSource, Config config) {
 	this.frameSource = frameSource;
 	this.tracker = new TemplateTracker(config);
     }

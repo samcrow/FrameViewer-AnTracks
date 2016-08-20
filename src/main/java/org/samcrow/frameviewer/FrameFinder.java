@@ -32,7 +32,7 @@ import javafx.scene.image.Image;
  * that start with 1, consistent with the naming of frame images.
  * @author Sam Crow
  */
-public class FrameFinder {
+public class FrameFinder implements FrameSource {
     
     private final File[] imageFiles;
     
@@ -73,6 +73,7 @@ public class FrameFinder {
     /**
      * @return The highest frame number that is available
      */
+    @Override
     public int getMaximumFrame() {
         return firstFrame + imageFiles.length - 1;
     }
@@ -80,6 +81,7 @@ public class FrameFinder {
     /**
      * @return The lowest frame number that is available
      */
+    @Override
     public int getFirstFrame() {
         return firstFrame;
     }
@@ -91,6 +93,7 @@ public class FrameFinder {
      * @return An image for the frame
      * @throws FrameIndexOutOfBoundsException if the frame number is out of range
      */
+    @Override
     public Image getImage(int frameNumber) {
         if(frameNumber < getFirstFrame() || frameNumber > getMaximumFrame()) {
             throw new FrameIndexOutOfBoundsException(getFirstFrame(), frameNumber, getMaximumFrame());

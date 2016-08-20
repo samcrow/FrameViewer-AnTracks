@@ -93,7 +93,7 @@ public class App extends Application {
             }
             
             trajectoryDataStore = new DatabaseTrajectoryDataStore(dialog.getDataSource(), dialog.getPointsTableName(), dialog.getTrajectoriesTableName());
-            FrameFinder finder = new FrameFinder(frameDir);
+            FrameSource finder = new FrameFinder(frameDir);
             model = new DataStoringPlaybackControlModel(finder, trajectoryDataStore);
 
 	    Tracker tracker = new Tracker(finder, new TemplateTracker.Config(20, 20));

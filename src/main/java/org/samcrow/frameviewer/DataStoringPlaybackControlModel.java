@@ -33,7 +33,7 @@ public class DataStoringPlaybackControlModel extends PlaybackControlModel {
 
     private FrameCanvas canvas;
 
-    public DataStoringPlaybackControlModel(FrameFinder frameFinder,
+    public DataStoringPlaybackControlModel(FrameSource frameFinder,
             MultiFrameDataStore<Trajectory0> newTrajectoryDataStore) {
         
         super(frameFinder);
