@@ -39,7 +39,7 @@ public class Cache <K, V> {
     /**
      * The maximum number of objects that this cache should maintain
      */
-    private static final int MAX_CACHE_COUNT = 512;
+    private static final int MAX_CACHE_COUNT = 1024;
     
     public Cache(int initialCapacity, CacheSource<? extends V> cache) {
         map = new CachingMap<>(initialCapacity, MAX_CACHE_COUNT);
