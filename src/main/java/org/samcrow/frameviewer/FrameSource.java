@@ -19,9 +19,10 @@ public interface FrameSource {
      * and returns it
      * @param frameNumber The 1-based frame index to get
      * @return An image for the frame
+     * @throws java.lang.Exception if an error occurs
      * @throws FrameIndexOutOfBoundsException if the frame number is out of range
      */
-    Image getImage(int frameNumber);
+    FrameImage getImage(int frameNumber) throws Exception;
 
     /**
      * @return The highest frame number that is available

@@ -20,6 +20,8 @@
 // </editor-fold>
 package org.samcrow.frameviewer;
 
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.ObjectProperty;
@@ -33,6 +35,7 @@ import javafx.beans.value.ObservableValue;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.scene.image.Image;
+import jfxtras.labs.dialogs.MonologFX;
 
 /**
  * Handles the logic of playback controls.
@@ -55,7 +58,7 @@ public class PlaybackControlModel implements CurrentFrameProvider {
     /**
      * The frame that is currently displayed
      */
-    private final ObjectProperty<Image> currentFrameImage = new SimpleObjectProperty<>();
+    private final ObjectProperty<FrameImage> currentFrameImage = new SimpleObjectProperty<>();
     
     /**
      * The frame number that is currently displayed
@@ -73,27 +76,35 @@ public class PlaybackControlModel implements CurrentFrameProvider {
         currentFrame.addListener(new ChangeListener<Number>() {
             @Override
             public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {
-                int frame = newValue.intValue();
-                if(frame < 1 || frame > getMaximumFrame()) {
-                    throw new FrameIndexOutOfBoundsException(getFirstFrame(), frame, getMaximumFrame());
-                }
-                
-                currentFrameImage.set(finder.getImage(frame));
-                
-                //Disable backwards buttons if the first frame has been reached
-                if(frame <= getFirstFrame()) {
-                    jumpBackwardsEnabled.set(false);
-                }
-                else {
-                    jumpBackwardsEnabled.set(true);
-                }
-                //Disable forwards buttons if the last frame has been reached
-                if(frame >= getMaximumFrame()) {
-                    jumpForwardEnabled.set(false);
-                }
-                else {
-                    jumpForwardEnabled.set(true);
-                }
+		try {
+		    int frame = newValue.intValue();
+		    if(frame < 1 || frame > getMaximumFrame()) {
+			throw new FrameIndexOutOfBoundsException(getFirstFrame(), frame, getMaximumFrame());
+		    }
+		    
+		    currentFrameImage.set(finder.getImage(frame));
+		    
+		    //Disable backwards buttons if the first frame has been reached
+		    if(frame <= getFirstFrame()) {
+			jumpBackwardsEnabled.set(false);
+		    }
+		    else {
+			jumpBackwardsEnabled.set(true);
+		    }
+		    //Disable forwards buttons if the last frame has been reached
+		    if(frame >= getMaximumFrame()) {
+			jumpForwardEnabled.set(false);
+		    }
+		    else {
+			jumpForwardEnabled.set(true);
+		    }
+		} catch (Exception ex) {
+		    Logger.getLogger(PlaybackControlModel.class.getName())
+			    .log(Level.SEVERE, "Failed to load frame", ex);
+		    final MonologFX dialog = new MonologFX(MonologFX.Type.ERROR);
+		    dialog.setTitle("Failed to load frame");
+		    dialog.setMessage(ex.getLocalizedMessage());
+		}
             }
         });
         
@@ -127,22 +138,16 @@ public class PlaybackControlModel implements CurrentFrameProvider {
         }
     }
     
-    private final EventHandler<ActionEvent> jumpForwardHandler = new EventHandler<ActionEvent>() {
-        @Override
-        public void handle(ActionEvent t) {
-            jumpForwardButtonClicked();
-        }
+    private final EventHandler<ActionEvent> jumpForwardHandler = (ActionEvent t) -> {
+	jumpForwardButtonClicked();
     };
     
     public final EventHandler<ActionEvent> getJumpForwardButtonHandler() {
         return jumpForwardHandler;
     }
     
-    private final EventHandler<ActionEvent> jumpBackwardsHandler = new EventHandler<ActionEvent>() {
-        @Override
-        public void handle(ActionEvent t) {
-            jumpBackwardsButtonClicked();
-        }
+    private final EventHandler<ActionEvent> jumpBackwardsHandler = (ActionEvent t) -> {
+	jumpBackwardsButtonClicked();
     };
     
     public final EventHandler<ActionEvent> getJumpBackwardsButtonHandler() {
@@ -170,11 +175,11 @@ public class PlaybackControlModel implements CurrentFrameProvider {
         return finder.getMaximumFrame();
     }
     
-    public final ReadOnlyObjectProperty<Image> currentFrameImageProperty() {
+    public final ReadOnlyObjectProperty<FrameImage> currentFrameImageProperty() {
         return currentFrameImage;
     }
     
-    public Image getCurrentFrameImage() {
+    public FrameImage getCurrentFrameImage() {
         return currentFrameImage.get();
     }
 }

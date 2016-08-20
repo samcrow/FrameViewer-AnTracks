@@ -44,7 +44,7 @@ public class FrameFinder implements FrameSource {
     /**
      * Many cached images
      */
-    private final Cache<Integer, Image> cache;
+    private final Cache<Integer, FrameImage> cache;
 
     public FrameFinder(File frameDir) {
         if(frameDir.exists() && !frameDir.isDirectory()) {
@@ -62,9 +62,9 @@ public class FrameFinder implements FrameSource {
         //Extract the frame number of the first frame
         firstFrame = extractFrameNumber(imageFiles[0].getName());
         
-        cache = new Cache<>(imageFiles.length, new Cache.CacheSource<Image>() {
+        cache = new Cache<>(imageFiles.length, new Cache.CacheSource<FrameImage>() {
             @Override
-            public Image load(int index) throws IOException {
+            public FrameImage load(int index) throws IOException {
                 return FrameFinder.this.load(index);
             }
         });
@@ -94,7 +94,7 @@ public class FrameFinder implements FrameSource {
      * @throws FrameIndexOutOfBoundsException if the frame number is out of range
      */
     @Override
-    public Image getImage(int frameNumber) {
+    public FrameImage getImage(int frameNumber) throws Exception {
         if(frameNumber < getFirstFrame() || frameNumber > getMaximumFrame()) {
             throw new FrameIndexOutOfBoundsException(getFirstFrame(), frameNumber, getMaximumFrame());
         }
@@ -104,14 +104,14 @@ public class FrameFinder implements FrameSource {
     }
 
     
-    private Image load(int index) throws IOException {
+    private FrameImage load(int index) throws IOException {
         String uri = imageFiles[index].toURI().toString();
         Image image = new Image(uri);
         if(image.isError()) {
             throw new IOException("Image for frame "+ (index + 1) +" could not be loaded", image.getException());
         }
         
-        return image;
+        return new FrameImage(image, image.getRequestedWidth() / image.getRequestedHeight());
     }
     
     private static int extractFrameNumber(String fileName) {

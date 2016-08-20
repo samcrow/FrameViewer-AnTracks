@@ -20,7 +20,6 @@
 // </editor-fold>
 package org.samcrow.frameviewer.ui;
 
-import com.sun.javafx.property.adapter.PropertyDescriptor;
 import java.util.ArrayList;
 import java.util.List;
 import javafx.beans.InvalidationListener;
@@ -37,8 +36,8 @@ import javafx.event.EventHandler;
 import javafx.geometry.Point2D;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.effect.ColorAdjust;
-import javafx.scene.image.Image;
 import javafx.scene.input.MouseEvent;
+import org.samcrow.frameviewer.FrameImage;
 import org.samcrow.frameviewer.PaintableCanvas;
 import org.samcrow.frameviewer.io3.DatabaseTrajectoryDataStore;
 import org.samcrow.frameviewer.track.Tracker;
@@ -59,7 +58,7 @@ public class FrameCanvas extends PaintableCanvas {
     /**
      * The image to be displayed
      */
-    private final ObjectProperty<Image> image = new SimpleObjectProperty<>();
+    private final ObjectProperty<FrameImage> image = new SimpleObjectProperty<>();
 
     private final IntegerProperty currentFrame = new SimpleIntegerProperty();
 
@@ -255,8 +254,8 @@ public class FrameCanvas extends PaintableCanvas {
 	    final double canvasWidth = getWidth();
 	    final double canvasHeight = getHeight();
 
-	    final double targetImageWidth = image.get().getWidth();
-	    final double targetImageHeight = image.get().getHeight();
+	    final double targetImageWidth = image.get().getDisplayWidth();
+	    final double targetImageHeight = image.get().getDisplayHeight();
 	    final double imageAspectRatio = targetImageWidth / targetImageHeight;
 
 	    final double widthRatio = targetImageWidth / canvasWidth;
@@ -280,7 +279,7 @@ public class FrameCanvas extends PaintableCanvas {
 	    imageTopLeftY = centerY - imageHeight / 2;
 
 	    gc.setEffect(imageAdjust);
-	    gc.drawImage(image.get(), imageTopLeftX, imageTopLeftY, imageWidth,
+	    gc.drawImage(image.get().getImage(), imageTopLeftX, imageTopLeftY, imageWidth,
 		    imageHeight);
 	    gc.setEffect(null);
 
@@ -294,8 +293,8 @@ public class FrameCanvas extends PaintableCanvas {
 		    if(activeController.getActiveTrajectory() == trajectory) {
 			continue;
 		    }
-		    trajectory.paint(gc, image.get().getWidth(), image.get()
-			    .getHeight(), imageWidth, imageHeight, imageTopLeftX,
+		    trajectory.paint(gc, image.get().getImage().getWidth(), image.get()
+			    .getImage().getHeight(), imageWidth, imageHeight, imageTopLeftX,
 			    imageTopLeftY, getCurrentFrame(), getDisplayMode(),
 			    false);
 		}
@@ -304,8 +303,8 @@ public class FrameCanvas extends PaintableCanvas {
 		final Trajectory0 active = activeController
 			.getActiveTrajectory();
 		if (active != null) {
-		    active.paint(gc, image.get().getWidth(), image.get()
-			    .getHeight(), imageWidth, imageHeight, imageTopLeftX,
+		    active.paint(gc, image.get().getImage().getWidth(), image.get()
+			    .getImage().getHeight(), imageWidth, imageHeight, imageTopLeftX,
 			    imageTopLeftY, getCurrentFrame(), getDisplayMode(),
 			    true);
 		}
@@ -354,8 +353,8 @@ public class FrameCanvas extends PaintableCanvas {
 	assert xRatio <= 1;
 	assert yRatio <= 1;
 
-	return new Point2D(image.get().getWidth() * xRatio, image.get()
-		.getHeight() * yRatio);
+	return new Point2D(image.get().getImage().getWidth() * xRatio, image.get()
+		.getImage().getHeight() * yRatio);
     }
 
     private boolean pointClicked(double x, double y, Point2D frameLocation) {
@@ -375,7 +374,7 @@ public class FrameCanvas extends PaintableCanvas {
 
     }
 
-    public final ObjectProperty<Image> imageProperty() {
+    public final ObjectProperty<FrameImage> imageProperty() {
 	return image;
     }
 

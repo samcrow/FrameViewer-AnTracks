@@ -20,7 +20,6 @@
 // </editor-fold>
 package org.samcrow.frameviewer;
 
-import java.io.IOException;
 import java.lang.ref.SoftReference;
 import java.util.Map;
 
@@ -40,7 +39,7 @@ public class Cache <K, V> {
     /**
      * The maximum number of objects that this cache should maintain
      */
-    private static final int MAX_CACHE_COUNT = 100;
+    private static final int MAX_CACHE_COUNT = 128;
     
     public Cache(int initialCapacity, CacheSource<? extends V> cache) {
         map = new CachingMap<>(initialCapacity, MAX_CACHE_COUNT);
@@ -58,7 +57,7 @@ public class Cache <K, V> {
      * @param index The index to get a value for
      * @return
      */
-    public synchronized V get(int index) {
+    public synchronized V get(int index) throws Exception {
         load(index);
         SoftReference<V> ref = map.get(index);
         if(ref == null) {
@@ -106,20 +105,16 @@ public class Cache <K, V> {
      * Ensures that this cache has an entry for the given index
      * @param index The index to load
      */
-    public synchronized void load(int index) {
-        try {
-            SoftReference<V> ref = map.get(index);
-            if(ref == null) {
-                ref = new SoftReference<>(source.load(index));
-                map.put(index, ref);
-            }
-            if(ref.get() == null) {
-                ref = new SoftReference<>(source.load(index));
-                map.put(index, ref);
-            }
-        } catch (IOException ex) {
-            ex.printStackTrace();
-        }
+    public synchronized void load(int index) throws Exception {
+	SoftReference<V> ref = map.get(index);
+	if(ref == null) {
+	    ref = new SoftReference<>(source.load(index));
+	    map.put(index, ref);
+	}
+	if(ref.get() == null) {
+	    ref = new SoftReference<>(source.load(index));
+	    map.put(index, ref);
+	}
     }
     
     /**
@@ -143,9 +138,9 @@ public class Cache <K, V> {
          * Loads and returns an object identified by the given index
          * @param index the 0-based index to return
          * @return the object
-         * @throws IOException  
+         * @throws Exception  
          */
-        public T2 load(int index) throws IOException;
+        public T2 load(int index) throws Exception;
         
     }
 }

@@ -21,7 +21,6 @@
 package org.samcrow.frameviewer.track;
 
 import javafx.scene.image.Image;
-import org.samcrow.frameviewer.FrameFinder;
 import org.samcrow.frameviewer.FrameIndexOutOfBoundsException;
 import org.samcrow.frameviewer.FrameSource;
 import org.samcrow.frameviewer.trajectory.BasicTrajectory;
@@ -64,11 +63,11 @@ public class Tracker {
      * of the ant in the next frame, or null if no frame is available
      */
     public Point trackOne(Point currentPosition, int currentFrameNumber,
-	    int nextFrameNumber) {
+	    int nextFrameNumber) throws Exception {
 	try {
 	    Image currentFrame = frameSource
-		    .getImage(currentFrameNumber);
-	    Image nextFrame = frameSource.getImage(nextFrameNumber);
+		    .getImage(currentFrameNumber).getImage();
+	    Image nextFrame = frameSource.getImage(nextFrameNumber).getImage();
 	    java.awt.Point nextPosition = tracker.track(new java.awt.Point(
 		    currentPosition.getX(), currentPosition.getY()),
 		    currentFrame,
@@ -94,7 +93,7 @@ public class Tracker {
      * frame, with a position of the ant included for the start and end frames
      * and all frames in between
      */
-    public Trajectory<Point> track(Point startPos, int start, int end) {
+    public Trajectory<Point> track(Point startPos, int start, int end) throws Exception {
 	
 	Trajectory<Point> trajectory;
 	if(start <= end) {
@@ -108,7 +107,7 @@ public class Tracker {
 	return trajectory;
     }
     
-    private Trajectory<Point> trackForwards(Point startPos, int start, int end) {
+    private Trajectory<Point> trackForwards(Point startPos, int start, int end) throws Exception {
 	Trajectory<Point> trajectory = new BasicTrajectory<>();
 	trajectory.put(start, startPos);
 	Point lastPosition = startPos;
@@ -124,7 +123,7 @@ public class Tracker {
 	return trajectory;
     }
     
-    private Trajectory<Point> trackBackwards(Point startPos, int start, int end) {
+    private Trajectory<Point> trackBackwards(Point startPos, int start, int end) throws Exception {
 	Trajectory<Point> trajectory = new BasicTrajectory<>();
 	trajectory.put(start, startPos);
 	Point lastPosition = startPos;
@@ -155,7 +154,7 @@ public class Tracker {
      * starting at startPos and ending at endPos
      */
     public Trajectory<Point> trackBidirectional(Point startPos,
-	    int start, Point endPos, int end, Trajectory<Point> forwards) {
+	    int start, Point endPos, int end, Trajectory<Point> forwards) throws Exception {
 
 	// Track forwards and backwards
 	if(forwards == null) {

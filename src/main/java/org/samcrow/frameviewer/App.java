@@ -29,18 +29,15 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javafx.application.Application;
 import javafx.event.ActionEvent;
-import javafx.event.EventHandler;
 import javafx.scene.Scene;
-import javafx.scene.control.Menu;
 import javafx.scene.control.MenuBar;
-import javafx.scene.control.MenuItem;
-import javafx.scene.input.KeyCombination;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
-import javafx.stage.DirectoryChooser;
+import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import jfxtras.labs.dialogs.MonologFX;
 import org.apache.commons.lang.exception.ExceptionUtils;
+import org.bytedeco.javacv.FrameGrabber;
 import org.samcrow.frameviewer.io3.DatabaseTrajectoryDataStore;
 import org.samcrow.frameviewer.track.Tracker;
 import org.samcrow.frameviewer.ui.ImageAdjustWindow;
@@ -62,20 +59,20 @@ public class App extends Application {
         
         try {
             // Check for command-line frame directory
-            File frameDir;
-            if (getParameters().getNamed().containsKey("frame-directory")) {
-                frameDir = new File(getParameters().getNamed().get("frame-directory"));
-                if (!frameDir.isDirectory()) {
-                    throw new IllegalArgumentException("The provided image directory path must be a folder");
+            File videoFile;
+            if (getParameters().getNamed().containsKey("video-file")) {
+                videoFile = new File(getParameters().getNamed().get("video-file"));
+                if (!videoFile.isFile()) {
+                    throw new IllegalArgumentException("The provided video file does not exist");
                 }
             }
             else {
-                DirectoryChooser chooser = new DirectoryChooser();
-                chooser.setTitle("Choose a directory with images to process");
-                frameDir = chooser.showDialog(stage);
+		final FileChooser chooser = new FileChooser();
+		chooser.setTitle("Open a video file");
+		videoFile = chooser.showOpenDialog(stage);
             }
             // Exit if no directory selected
-            if (frameDir == null) {
+            if (videoFile == null) {
                 stop();
             }
 
@@ -93,8 +90,8 @@ public class App extends Application {
             }
             
             trajectoryDataStore = new DatabaseTrajectoryDataStore(dialog.getDataSource(), dialog.getPointsTableName(), dialog.getTrajectoriesTableName());
-            FrameSource finder = new FrameFinder(frameDir);
-            model = new DataStoringPlaybackControlModel(finder, trajectoryDataStore);
+	    FrameSource finder = new FrameCache(new FFMpegFrameFinder(videoFile));
+	    model = new DataStoringPlaybackControlModel(finder, trajectoryDataStore);
 
 	    Tracker tracker = new Tracker(finder, new TemplateTracker.Config(20, 20));
             FrameCanvas canvas = new FrameCanvas(tracker);
@@ -148,13 +145,14 @@ public class App extends Application {
             stage.show();
 
         }
-        catch (Exception ex) {
+        catch (Throwable ex) {
+	    Logger.getLogger(App.class.getName()).log(Level.SEVERE, "Initialization failed", ex);
             showDialog(ex);
             stop();
         }
     }
 
-    private void showDialog(Exception ex) {
+    private void showDialog(Throwable ex) {
         MonologFX dialog = new MonologFX(MonologFX.Type.ERROR);
         dialog.setTitle(ex.toString());
         dialog.setMessage(ExceptionUtils.getFullStackTrace(ex));
