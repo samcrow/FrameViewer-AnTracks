@@ -29,6 +29,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javafx.application.Application;
 import javafx.event.ActionEvent;
+import javafx.event.EventHandler;
 import javafx.scene.Scene;
 import javafx.scene.control.Menu;
 import javafx.scene.control.MenuBar;
@@ -42,6 +43,7 @@ import jfxtras.labs.dialogs.MonologFX;
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.samcrow.frameviewer.io3.DatabaseTrajectoryDataStore;
 import org.samcrow.frameviewer.track.Tracker;
+import org.samcrow.frameviewer.ui.ImageAdjustWindow;
 import org.samcrow.frameviewer.ui.db.DatabaseConnectionDialog;
 import org.samcrow.tracking.TemplateTracker;
 
@@ -104,6 +106,18 @@ public class App extends Application {
 
             final PlaybackControlPane controls = new PlaybackControlPane(model);
             box.getChildren().add(controls);
+	    
+	    // Create image options window
+	    final ImageAdjustWindow imageAdjust = new ImageAdjustWindow();
+	    imageAdjust.initOwner(stage);
+	    canvas.brightnessProperty().bindBidirectional(imageAdjust.getView().brightnessProperty());
+	    canvas.contrastProperty().bindBidirectional(imageAdjust.getView().contrastProperty());
+	    canvas.hueProperty().bindBidirectional(imageAdjust.getView().hueProperty());
+	    canvas.saturationProperty().bindBidirectional(imageAdjust.getView().saturationProperty());
+	    
+	    controls.setOnImageControlsRequested((ActionEvent event) -> {
+		imageAdjust.show();
+	    });
 
             // Hook up the trajectory display options
             canvas.displayModeProperty().bindBidirectional(controls.trajectoryDisplayModeProperty());

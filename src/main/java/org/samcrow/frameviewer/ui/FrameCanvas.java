@@ -20,6 +20,7 @@
 // </editor-fold>
 package org.samcrow.frameviewer.ui;
 
+import com.sun.javafx.property.adapter.PropertyDescriptor;
 import java.util.ArrayList;
 import java.util.List;
 import javafx.beans.InvalidationListener;
@@ -35,6 +36,7 @@ import javafx.beans.value.ObservableValue;
 import javafx.event.EventHandler;
 import javafx.geometry.Point2D;
 import javafx.scene.canvas.GraphicsContext;
+import javafx.scene.effect.ColorAdjust;
 import javafx.scene.image.Image;
 import javafx.scene.input.MouseEvent;
 import org.samcrow.frameviewer.PaintableCanvas;
@@ -103,6 +105,11 @@ public class FrameCanvas extends PaintableCanvas {
      * The tracker used for tracking
      */
     private final Tracker tracker;
+    
+    /**
+     * The filter applied to frame images
+     */
+    private final ColorAdjust imageAdjust;
 
     public FrameCanvas(Tracker tracker) {
 	this.tracker = tracker;
@@ -221,6 +228,18 @@ public class FrameCanvas extends PaintableCanvas {
 		}
 	    }
 	});
+	
+	// Set up filter
+	imageAdjust = new ColorAdjust();
+	
+	final InvalidationListener repainter = (Observable observable) -> {
+	    repaint();
+	};
+	
+	brightnessProperty().addListener(repainter);
+	contrastProperty().addListener(repainter);
+	hueProperty().addListener(repainter);
+	saturationProperty().addListener(repainter);
     }
 
     @Override
@@ -260,8 +279,10 @@ public class FrameCanvas extends PaintableCanvas {
 	    imageTopLeftX = centerX - imageWidth / 2;
 	    imageTopLeftY = centerY - imageHeight / 2;
 
+	    gc.setEffect(imageAdjust);
 	    gc.drawImage(image.get(), imageTopLeftX, imageTopLeftY, imageWidth,
 		    imageHeight);
+	    gc.setEffect(null);
 
 	    if (getDisplayMode() != TrajectoryDisplayMode.Hidden) {
 		gc.save();
@@ -424,5 +445,18 @@ public class FrameCanvas extends PaintableCanvas {
     private static ObjectProperty<List<Trajectory0>> createTrajectoriesProperty() {
 	final List<Trajectory0> initialList = new ArrayList<>();
 	return new SimpleObjectProperty<>(initialList);
+    }
+        
+    public final DoubleProperty brightnessProperty() {
+	return imageAdjust.brightnessProperty();
+    }
+    public final DoubleProperty contrastProperty() {
+	return imageAdjust.contrastProperty();
+    }
+    public final DoubleProperty hueProperty() {
+	return imageAdjust.hueProperty();
+    }
+    public final DoubleProperty saturationProperty() {
+	return imageAdjust.saturationProperty();
     }
 }

@@ -58,6 +58,8 @@ public class PlaybackControlPane extends HBox {
     private final PlaybackControlModel model;
 
     private final Button refreshButton;
+    
+    private final Button imageButton;
 
     private final ObjectProperty<TrajectoryTool> trajectoryTool = new SimpleObjectProperty<>();
 
@@ -81,6 +83,11 @@ public class PlaybackControlPane extends HBox {
 	    refreshButton = new Button("Refresh");
 	    getChildren().add(refreshButton);
 	    setMargin(refreshButton, PADDING);
+	}
+	{
+	    imageButton = new Button("Image");
+	    getChildren().add(imageButton);
+	    setMargin(imageButton, PADDING);
 	}
 
 	// Left spacer
@@ -226,6 +233,10 @@ public class PlaybackControlPane extends HBox {
 
     public final void setOnRefreshRequested(EventHandler<ActionEvent> handler) {
 	refreshButton.setOnAction(handler);
+    }
+    
+    public final void setOnImageControlsRequested(EventHandler<ActionEvent> handler) {
+	imageButton.setOnAction(handler);
     }
 
     /**
